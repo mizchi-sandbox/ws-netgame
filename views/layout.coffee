@@ -8,11 +8,12 @@ html ->
       '/zappa/jquery.js'
       '/jquery.tmpl.js'
       '/knockout-1.3.0beta.js'
-      '/coffeekup.js'
-      '/jquery.keybind.js'
+      '/easel.js'
+      '/game.js'
       '/shared.js'
       '/bootstrap.js'
       '/index.js'
+
     ]
     (link rel:"stylesheet",type:"text/css",href:i) for i in [
       "/bootstrap.min.css"

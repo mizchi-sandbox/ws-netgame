@@ -1,6 +1,7 @@
 {Sprite} = require('./sprites')
 Skill = require('./skills')
 {Weapons} = require('./equip')
+
 Array::size = =>
   return @length
 
@@ -30,6 +31,7 @@ class Character extends Sprite
     @cnt = ~~(Math.random() * 60)
     @distination = [@x,@y]
     @_path = []
+    @keys = {}
 
   regenerate: ()->
     r = (if @targeting_obj then 2 else 1)
@@ -110,7 +112,7 @@ class Character extends Sprite
 
   get_param:(param)->
     (item?[param] or 0 for at,item of @_equips_).reduce (x,y)-> x+y
-
+    #
   die : (actor)->
     @cnt = 0
     if @group == ObjectGroup.Enemy
@@ -244,6 +246,7 @@ class Player extends Character
   constructor: (@scene, @x,@y,@group=ObjectGroup.Player) ->
     super(@x,@y,@group)
     @keys = {}
+    @id = 0
     @status = new Status
       str: 10
       int: 10
@@ -254,35 +257,14 @@ class Player extends Character
       three: new Skill.Skill_Heal(@)
       four: new Skill.Skill_Meteor(@)
     @selected_skill = @skills['one']
+
     @_equips_ =
       main_hand : new Weapons::Blade
       sub_hand : null
       body : null
 
-    @mouse = @scene.core.mouse
-
-  getkey: (which,to) ->
-    switch which
-      when 68,39 then @keys.right = to
-      when 65,37 then @keys.left = to
-      when 87,38 then @keys.up = to
-      when 83,40 then @keys.down = to
-      when 32 then @keys.space = to
-      when 17 then @keys.ctrl = to
-      when 48 then @keys.zero = to
-      when 49 then @keys.one = to
-      when 50 then @keys.two = to
-      when 51 then @keys.three = to
-      when 52 then @keys.four = to
-      when 53 then @keys.five = to
-      when 54 then @keys.sixe = to
-      when 55 then @keys.seven = to
-      when 56 then @keys.eight = to
-      when 57 then @keys.nine = to
-    @keys[String.fromCharCode(which).toLowerCase()] = to
-
   change_skill: ()->
-    @set_skill @scene.core.keys
+    @set_skill @keys
 
   update:(objs, cmap)->
     enemies = @find_obj(ObjectGroup.get_against(@),objs,@status.sight_range)
@@ -290,16 +272,8 @@ class Player extends Character
       @shift_target(enemies)
     super objs,cmap
 
-  set_mouse_dir: (x,y)->
-    rx = x - 320
-    ry = y - 240
-    if rx > 0
-      @dir = Math.atan( ry / rx  )
-    else
-      @dir = Math.PI - Math.atan( ry / - rx  )
 
   move: (objs,cmap)->
-    # @dir = @set_mouse_dir(mouse.x , mouse.y)
     keys = @keys
 
     if keys.right + keys.left + keys.up + keys.down > 1
@@ -317,12 +291,12 @@ class Player extends Character
         @x = (~~(@x/cmap.cell))*cmap.cell+1
       else
         @x -= move
-    if keys.up
+    if keys.down
       if cmap.collide( @x , @y-move )
         @y = (~~(@y/cmap.cell))*cmap.cell+1
       else
         @y -= move
-    if keys.down
+    if keys.up
       if cmap.collide( @x , @y+move )
         @y = (~~(@y/cmap.cell+1))*cmap.cell-1
       else

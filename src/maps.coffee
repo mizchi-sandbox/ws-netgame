@@ -241,39 +241,42 @@ randint = (from,to) ->
 class RandomStage extends Stage
   constructor: (@context , @cell=32) ->
     super @cell
-    @players = @context.players
     @_map = create_map 30,30,10
-    @max_object_count = 10
-    @frame_count = 0
-    @players = @context.player
+    @max_object_count = 10      #
+    @fcnt = 0
+    @players = {}
+    @objects = []
 
-    # for i in @_map
-    #   console.log (''+i).split('0').join(' ')
+  # get_obj:->
+  #   (for k,v of @players).concat(@objects)
 
-  update:(objs)->
-    @sweep(objs)
-    @pop_monster(objs)
-    @frame_count++
-    # if @frame_count%30 is 0
-    #   # console.log ([i.x,i.y] for i in @context.objs)
-    #   console.log (i.status.hp/i.status.MAX_HP for i in @context.objs)
+  join : (id)->
+    p = @players[id] = new Player(@,320,320) #id:id,keys:{}
+    p.id = id
 
-  sweep: (objs)->
-    for i in [0 ... objs.length]
-      if objs[i].is_dead() and objs[i].cnt > 120
-        objs.splice(i,1)
+  leave : (id)->
+    delete @players[id]
+
+  update:()->
+    obj.update(@objects, @) for obj in @objects
+    v.update(@objects, @) for k,v of @players
+    @sweep()
+    @pop_monster()
+    @fcnt++
+    # console.log ([i.x,i.y] for k,i of @players ) if @fcnt%30 is 0
+
+  sweep: ()->
+    for i in [0 ... @objects.length]
+      if @objects[i].is_dead() and @objects[i].cnt > 120
+        @objects.splice(i,1)
         break
 
-  pop_monster: (objs) ->
-    # リポップ条件確認
-    if objs.length < @max_object_count and @frame_count % 60*3 == 0
+  pop_monster: () ->
+    if @objects.length < @max_object_count and @fcnt % 60*3 == 0
       random_point  = @get_rand_xy()
-      if Math.random() < 0.9
-        group = (if Math.random() > 0.5 then ObjectGroup.Enemy else ObjectGroup.Player )
-        objs.push( gob = new Goblin(random_point.x, random_point.y, group) )
-        console.log "pop monster:"+group
-      # else
-      #   objs.push( new MoneyObject(random_point.x, random_point.y) )
+      if random() < 0.9
+        @objects.push( gob = new Goblin(random_point.x, random_point.y, ObjectGroup.Enemy) )
+        console.log "pop monster:"
 
 
 exports.RandomStage = RandomStage
