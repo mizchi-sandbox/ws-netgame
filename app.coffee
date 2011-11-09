@@ -4,7 +4,7 @@ game.start()
 
 log_level = 3
 
-require('zappa') ->
+require('zappa') 4444, ->
   @io.set( "log level", 1 )
   @use "static",@app.router
     , @express.cookieParser()

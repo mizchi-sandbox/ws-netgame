@@ -1,6 +1,12 @@
 {pow,sqrt,abs,random,max,min} = Math
 {Player, Goblin,ObjectGroup} = require('./char')
 {Sprite,MoneyObject} = require('./sprites')
+Array::remove = (obj)-> @splice(@indexOf(obj),1)
+Array::size = ()-> @.length
+Array::first = ()-> @[0]
+Array::last = ()-> @[@.length-1]
+Array::each = Array::forEach
+
 
 class Room
   constructor:(@map,@depth, @ax,@ay)->
