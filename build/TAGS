@@ -1,0 +1,70 @@
+
+(null),6503
+  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __indexOf = Array.prototype.indexOf || function(item) {__bind3,461
+    function ctor() { this.constructor = child; }function.ctor10,896
+    ctor.prototype = parent.prototype;ctor11,946
+    mes: function(text) {my.mes113,3577
+    distance: function(x1, y1, x2, y2) {my.distance118,3700
+    gen_map: function(x, y) {my.gen_map124,3865
+    mklist: function(list, func) {my.mklist139,4188
+  rjoin = function(map1, map2) {rjoin151,4440
+  sjoin = function(map1, map2) {sjoin154,4508
+  randint = function(from, to) {randint167,4835
+    Red: "rgb(255,0,0)",Color.Red175,5004
+    Blue: "rgb(0,0,255)",Color.Blue176,5029
+    Green: "rgb(0,255,0)",Color.Green177,5055
+    White: "rgb(255,255,255)",Color.White178,5082
+    Black: "rgb(0,0,0)",Color.Black179,5113
+    i: function(r, g, b) {Color.i180,5138
+    Player: 0,ObjectGroup.Player245,7087
+    Enemy: 1,ObjectGroup.Enemy246,7102
+    Item: 2,ObjectGroup.Item247,7116
+    is_battler: function(group_id) {ObjectGroup.is_battler248,7129
+    get_against: function(obj) {ObjectGroup.get_against251,7239
+    gold: 0,GameData.gold338,10032
+    items: []GameData.items339,10045
+  Sys = new Object;Sys341,10064
+    message: function(text) {Sys.message343,10104
+    debug: function(text) {Sys.debug352,10369
+    filed1: "\n                                           .........\n                                    ................... .\n                               ...........            ......\n                            ....                      ..........\n                         .....              .....        ...... .......\n                 ..........              .........        ............ .....\n                 ............          ...... . ....        ............ . ..\n             .....    ..    ...        ..  ..........       . ..................\n     ..     ......          .........................       . .......   ...... ..\n    .....    ...     ..        .......  ...............      ....        ........\n  ...... ......    .....         ..................... ..   ....         ........\n  .........   ......  ...............  ................... ....            ......\n ...........    ... ... .... .   ..   .. ........ ............             . .....\n ...........    ...... ...       ....................           ......\n............   .......... .    .......... ...... .. .       ...........\n .. ........ .......   ....   ...... .   ............      .... .......\n . ..............       .... .. .       ..............   ...... ..... ..\n  .............          .......       ......       ......... . ...... .\n  ..     .... ..         ... .       ....         .........   ...........\n ...       .......   ........       .. .        .... ....  ... ..........\n.. .         ......  .........      .............. ..  .....  ...    .....\n.....         ......................................      ....        ....\n .....       ........    ... ................... ....     ...        ....\n   ....   ........        ...........................  .....        .....\n   ...........  ..        ........ .............. ... .. .         .....\n       ......                 .........................           .. ..\n                                .....................          .......\n                                    ...................        ......\n                                        .............",maps.filed1651,20543
+    debug: "             ....\n          ...........\n        ..............\n      .... ........... .\n     .......  ..  ........\n.........    ..     ......\n........   ......    .......\n.........   .....    .......\n .................. ........\n     .......................\n     ....................\n           .............\n              ......\n               ...\n"maps.debug652,22691
+    Player: 0,ObjectGroup.Player1206,41323
+    Enemy: 1,ObjectGroup.Enemy1207,41338
+    Item: 2,ObjectGroup.Item1208,41352
+    is_battler: function(group_id) {ObjectGroup.is_battler1209,41365
+    get_against: function(obj) {ObjectGroup.get_against1212,41475
+  String.prototype.replaceAll = function(org, dest) {String1644,55925
+  String.prototype.replaceAll = function(org, dest) {String.replaceAll1644,55925
+  Array.prototype.find = function(pos) {Array1647,56023
+  Array.prototype.find = function(pos) {Array.find1647,56023
+  Array.prototype.remove = function(obj) {Array.remove1657,56271
+  Array.prototype.size = function() {Array.size1660,56365
+  Array.prototype.first = function() {Array.first1663,56432
+  Array.prototype.last = function() {Array.last1666,56496
+  Array.prototype.each = Array.prototype.forEach;Array.each1669,56573
+    Canvas.prototype.init = function(color, alpha) {Canvas1672,56756
+    Canvas.prototype.init = function(color, alpha) {Canvas.init1672,56756
+    Canvas.prototype.drawLine = function(x, y, dx, dy) {Canvas.drawLine1684,57070
+    Canvas.prototype.drawPath = function(fill, path) {Canvas.drawPath1689,57222
+    Canvas.prototype.drawDiffPath = function(fill, path) {Canvas.drawDiffPath1704,57660
+    Canvas.prototype.drawLine = function(x, y, dx, dy) {Canvas.drawLine1721,58244
+    Canvas.prototype.drawDLine = function(x1, y1, x2, y2) {Canvas.drawDLine1726,58396
+    Canvas.prototype.drawArc = function(fill, x, y, size, from, to, reverse) {Canvas.drawArc1731,58545
+  Util.prototype = {Util1750,58966
+    extend: function(obj, mixin) {Util.extend1751,58987
+    include: function(klass, mixin) {Util.include1759,59165
+      return Util.prototype.extend(klass.prototype, mixin);return1760,59203
+      return Util.prototype.extend(klass.prototype, mixin);return.extend1760,59203
+    dup: function(obj) {Util.dup1762,59270
+      f = function() {};f1764,59308
+      f.prototype = obj;f1765,59333
+    WINDOW_WIDTH: 640,Conf.WINDOW_WIDTH1771,59436
+    WINDOW_HEIGHT: 480,Conf.WINDOW_HEIGHT1772,59459
+    VIEW_X: 320,Conf.VIEW_X1773,59483
+    VIEW_Y: 240,Conf.VIEW_Y1774,59500
+    CANVAS_NAME: "game",Conf.CANVAS_NAME1775,59517
+    FPS: 60Conf.FPS1776,59542
+    gamewindow.onmousemove = function(e) {gamewindow.onmousemove1787,60021
+    window.document.onkeydown = function(e) {window.document.onkeydown1791,60177
+    window.document.onkeyup = function(e) {window.document.onkeyup1794,60276
+  window.onload = function() {window.onload1783,59887
