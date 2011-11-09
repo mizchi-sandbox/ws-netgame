@@ -1,15 +1,16 @@
-{Sprite} = require('./sprites')
+{Sprite,ObjectGroup} = require('./sprites')
 Skill = require('./skills')
 {Weapons} = require('./equip')
+{random} = Math
 
-Array::size = =>
+Array::size = ->
   return @length
 
-randint = (from,to) ->
+randint = (from,to)->
   if not to?
     to = from
     from = 0
-  ~~( Math.random()*(to-from+1))+from
+  ~~(random()*(to-from+1))+from
 
 class Character extends Sprite
   scale : null
@@ -26,12 +27,13 @@ class Character extends Sprite
     @targeting_obj = null
     @dir = 0
     @cnt = 0
-    @id = ~~(Math.random() * 100)
+    @id = ~~(random() * 100)
     @animation = []
-    @cnt = ~~(Math.random() * 60)
+    @cnt = ~~(random() * 60)
     @distination = [@x,@y]
     @_path = []
     @keys = {}
+    @gold = 0
 
   regenerate: ()->
     r = (if @targeting_obj then 2 else 1)
@@ -53,11 +55,9 @@ class Character extends Sprite
     enemies = @find_obj(ObjectGroup.get_against(@),objs,@status.sight_range)
     if @has_target()
       if @targeting_obj.is_dead() or @get_distance(@targeting_obj) > @status.sight_range*1.5
-        # ターゲットが死 or 感知外
         console.log "#{@name} lost track of #{@targeting_obj.name}"
         @targeting_obj = null
-    else if enemies.size() > 0
-      # 新たに目視した場合
+    else if enemies.length > 0
       @targeting_obj = enemies[0]
       console.log "#{@name} find #{@targeting_obj.name}"
 
@@ -117,7 +117,7 @@ class Character extends Sprite
     @cnt = 0
     if @group == ObjectGroup.Enemy
       gold = randint(0,100)
-      GameData.gold += gold
+      actor.gold += gold
     actor.status.get_exp(@status.lv*10)
     console.log "#{@name} is killed by #{actor.name}." if actor
     console.log "You got #{gold}G." if gold
@@ -130,7 +130,8 @@ class Character extends Sprite
 
   set_skill :()->
     for k,v of @keys
-      if v and k in ["zero","one","two","three","four","five","six","seven","eight","nine"]
+      # if v and k in ["zero","one","two","three","four","five","six","seven","eight","nine"]
+      if v and k in ["one","two","three","four"]
         @selected_skill = @skills[k]
         break
 

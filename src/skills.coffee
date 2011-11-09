@@ -1,3 +1,11 @@
+{ObjectGroup} = require './sprites'
+
+randint = (from,to) ->
+  if not to?
+    to = from
+    from = 0
+  ~~( Math.random()*(to-from+1))+from
+
 class Skill
   constructor: (@actor,@lv=1) ->
     @_build(@lv)
@@ -10,6 +18,7 @@ class Skill
         @ct += @fg_charge
       else
         @ct += @bg_charge
+
   update: (objs,keys)->
     for name,skill of @actor.skills
       skill.charge @, skill is @
@@ -38,7 +47,8 @@ class DamageHit extends Skill
 
   exec:(objs)->
     targets = @_get_targets(objs)
-    if @ct >= @MAX_CT and targets.size() > 0
+    # console.log @actor.name+":"+@name+":"+@ct/@MAX_CT
+    if @ct >= @MAX_CT and targets.length > 0
       for t in targets
         amount = @_calc t
         t.add_damage(@actor,amount)
@@ -98,6 +108,10 @@ class Skill_Atack extends SingleHit
     @fg_charge -= lv/20
     @damage_rate += lv/20
 
+  # exec:(objs)->
+  #   super objs
+  #   console.log @name
+
 class Skill_Smash extends SingleHit
   name : "Smash"
   range : 60
@@ -144,7 +158,7 @@ class Skill_Heal extends Skill
     if @ct >= @MAX_CT
       target.status.hp += 30
       @ct = 0
-      Sys::debug "do healing"
+      console.log "do healing"
 
 class Skill_ThrowBomb extends Skill
   name : "Throw Bomb"

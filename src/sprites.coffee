@@ -93,3 +93,5 @@ GameData =
   items : []
 
 exports.Sprite = Sprite
+
+exports.ObjectGroup = ObjectGroup
