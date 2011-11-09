@@ -1,0 +1,10 @@
+WS-NetGame
+
+diabloっぽいネトゲ目指してつくろうとしたもの
+
+$ coffee app.coffee
+$ open localhost:3000
+
+![ss](https://github.com/mizchi/diappoi/raw/astar/ss.jpeg "ss")
+
+
