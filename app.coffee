@@ -17,10 +17,22 @@ require('zappa') ->
   @set 'views', __dirname + '/views'
   @enable 'serve jquery'
 
+  # game.ws = =>
+  #   objs = game.stage.objects.concat (v for _,v game.stage.players)
+  #   @io.sockets.emit 'update',
+  #     objs:([i.x,i.y] for i in game.stage.objects)
+  #     players:([i.x,i.y,i.id] for k,i of game.stage.players)
   game.ws = =>
+    objs = game.stage.objects.concat (v for k,v of game.stage.players)
+    ret = objs.map (i)->
+      x: i.x
+      y: i.y
+      id: String(i.id or 0)
+      hp : i.status.hp/i.status.MAX_HP
+      skill : i.selected_skill.name
+
     @io.sockets.emit 'update',
-      objs:([i.x,i.y] for i in game.stage.objects)
-      players:([i.x,i.y,i.id] for k,i of game.stage.players)
+      objs: ret
 
   @shared "/shared.js":->
     r = window ? global

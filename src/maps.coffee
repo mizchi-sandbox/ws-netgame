@@ -241,7 +241,7 @@ randint = (from,to) ->
 class RandomStage extends Stage
   constructor: (@context , @cell=32) ->
     super @cell
-    @_map = create_map 30,30,10
+    @_map = create_map 80,80,10
     @max_object_count = 10      #
     @fcnt = 0
     @players = {}
@@ -272,7 +272,7 @@ class RandomStage extends Stage
 
   sweep: ()->
     for i in [0 ... @objects.length]
-      if @objects[i].is_dead() and @objects[i].cnt > 120
+      if @objects[i].is_dead() and @objects[i].cnt > 5
         @objects.splice(i,1)
         break
 
