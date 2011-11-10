@@ -256,10 +256,12 @@ class RandomStage extends Stage
   # get_obj:->
   #   (for k,v of @players).concat(@objects)
 
-  join : (id)->
+  join : (id,name,data={})->
     rp  = @get_rand_xy()
-    p = @players[id] = new Player(@,rp.x,rp.y)
+    p = @players[id] = new Player(@,rp.x,rp.y,data)
     p.id = id
+    p.name = name if name?
+
 
   leave : (id)->
     delete @players[id]
@@ -272,9 +274,9 @@ class RandomStage extends Stage
     @pop_monster()
     @fcnt++
 
-    if @fcnt%60 is 0
-      console.log (k+":"+v.status.hp/v.status.MAX_HP for k,v of @players)
-      console.log "monsters:"+(i.status.hp/i.status.MAX_HP for i in @objects)
+    # if @fcnt%60 is 0
+    #   console.log (k+":"+v.status.hp/v.status.MAX_HP for k,v of @players)
+    #   console.log "monsters:"+(i.status.hp/i.status.MAX_HP for i in @objects)
 
   sweep: ()->
     for i in [0 ... @objects.length]

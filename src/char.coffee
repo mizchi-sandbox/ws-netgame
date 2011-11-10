@@ -115,9 +115,10 @@ class Character extends Sprite
     #
   die : (actor)->
     @cnt = 0
-    if @group == ObjectGroup.Enemy
+    if @group is ObjectGroup.Enemy
       gold = randint(0,100)
       actor.gold += gold
+    # actor.status.get_exp(@status.lv*10)
     actor.status.get_exp(@status.lv*10)
     console.log "#{@name} is killed by #{actor.name}." if actor
     console.log "You got #{gold}G." if gold
@@ -207,12 +208,10 @@ class Character extends Sprite
 class Goblin extends Character
   name : "Goblin"
   scale : 1
-  constructor: (@x,@y,@group) ->
+  constructor: (@x,@y,@group,lv=1) ->
     @dir = 0
-    @status = new Status
-      str: 8
-      int: 4
-      dex: 6
+    @status = new Status {str: 8, int: 4, dex:6},{},1
+
     super(@x,@y,@group,@status)
     @skills =
       one: new Skill.Skill_Atack(@,3)
@@ -243,15 +242,11 @@ class Goblin extends Character
 
 class Player extends Character
   scale : 8
-  name : "Player"
-  constructor: (@scene, @x,@y,@group=ObjectGroup.Player) ->
+  constructor: (@scene, @x,@y,param = {},@group=ObjectGroup.Player) ->
+    console.log "player const lv "+param.lv
     super(@x,@y,@group)
     @keys = {}
-    @id = 0
-    @status = new Status
-      str: 10
-      int: 10
-      dex: 10
+    @status = new Status {str: 10,int: 10,dex: 10},{}, param.lv,param.exp
     @skills =
       one: new Skill.Skill_Atack(@)
       two: new Skill.Skill_Smash(@)
@@ -266,6 +261,9 @@ class Player extends Character
 
   change_skill: ()->
     @set_skill @keys
+
+  save:()->
+    @scene
 
   update:(objs, cmap)->
     enemies = @find_obj(ObjectGroup.get_against(@),objs,@status.sight_range)
@@ -317,12 +315,11 @@ ObjectGroup =
         return @Player
 
 class Status
-  constructor: (params = {}, equips = {}, @lv = 1) ->
+  constructor: (params = {}, equips = {}, @lv,@exp=0) ->
     @build_status(params,equips)
 
     @hp = @MAX_HP
-    @sp = @MAX_SP
-    @exp = 0
+    @sp = 0
     @next_lv = @lv * 50
 
     @STR = params.str
@@ -331,7 +328,6 @@ class Status
 
   build_status:(params={},equips)->
     @MAX_HP = params.str*10
-    @MAX_SP = params.int*10
 
     @atk = params.str
     @mgc = params.int
@@ -341,18 +337,20 @@ class Status
     @regenerate = ~~(params.str/10)
     @sight_range = params.dex*20
     @speed = ~~(params.dex * 0.5)
+
   level_up: ()->
     @lv++
-    [@STR++, @INT++ , @DEX++]
     @exp = 0
+    @sp++
     @next_lv = @lv * 50
     @build_status str:@STR,int:@INT,dex:@DEX
 
   get_exp:(point)->
+    console.log "get :"+point
     @exp += point
     if @exp >= @next_lv
       @level_up()
-      console.log 'you level up! to lv.'+@lv
+      console.log 'level up! to lv.'+@lv
 
   set_next_exp:()->
     @next_lv = @lv * 30

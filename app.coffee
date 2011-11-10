@@ -4,35 +4,56 @@ game.start()
 
 log_level = 3
 
-require('zappa') 4444, ->
-  @io.set( "log level", 1 )
-  @use "static",@app.router
-    , @express.cookieParser()
-    , @express.session
-      secret: "mykey"
-      cookie: { maxAge: 86400 * 1000 }
-    , @express.methodOverride()
-    , @express.bodyParser()
-    , @express.favicon()
-  @set 'views', __dirname + '/views'
-  @enable 'serve jquery'
+mongolian = require 'mongolian'
+server = new mongolian()
+db = server.db 'testdb'
+users = db.collection 'user'
 
-  # game.ws = =>
-  #   objs = game.stage.objects.concat (v for _,v game.stage.players)
-  #   @io.sockets.emit 'update',
-  #     objs:([i.x,i.y] for i in game.stage.objects)
-  #     players:([i.x,i.y,i.id] for k,i of game.stage.players)
+require('zappa') 4444, ->
+  RedisStore = require('connect-redis')(@express);
+
+  @io.set( "log level", 1 )
+
+  @app.use @express.bodyParser()
+  @app.use @express.methodOverride()
+  @app.use @express.cookieParser()
+  @app.use @express.session
+    secret: "wowowowo"
+    store: new RedisStore
+    cookie: { maxAge: 86400 * 1000 }
+  @app.use @app.router
+  @app.use @express.static __dirname+'/public'
+  @app.set 'views', __dirname + '/views'
+  @app.use @express.favicon()
+
+  @set 'views', __dirname + '/views'
+
+  @enable 'serve jquery'
   game.ws = =>
     objs = game.stage.objects.concat (v for k,v of game.stage.players)
     ret = objs.map (i)->
+      name: i.name
+      lv: i.status.lv
+      exp: ~~(100*i.status.exp/i.status.next_lv)
+      hp : ~~(100*i.status.hp/i.status.MAX_HP)
       x: i.x
       y: i.y
       id: String(i.id or 0)
-      hp : i.status.hp/i.status.MAX_HP
       skill : i.selected_skill.name
 
     @io.sockets.emit 'update',
       objs: ret
+
+  save = (id,name,char)->
+    console.log id,name
+    users.findOne {name:name},(e,item)=>
+      if item
+        char = game.stage.players[id] or char
+        item.lv = char.status.lv
+        item.exp = char.status.exp or 0
+        item.sp = char.status.sp
+        users.save item
+
 
   @shared "/shared.js":->
     r = window ? global
@@ -66,13 +87,33 @@ require('zappa') 4444, ->
         when 57 then return 'nine'
       return String.fromCharCode(keyCode).toLowerCase()
 
+  # Rooting
+  @get '/logout': ->
+    @session.destroy ()=>
+      @redirect '/'
+
   @get '/': ->
-    @render index:
-      title: 'myapp'
+    console.log @session.name
+    if @session.name
+      @render index:
+        id : @session.name
+    else
+      @render login:{}
+
+  @view login:->
+    a href:"/verify",-> "login"
+
+  twoauth = require('./twitter_oauth')
+  @get '/verify' : ->
+    twoauth.verify @request,@response,(token,token_secret,results)=>
+      @session.name = results.screen_name
+      console.log "[login] #{results.screen_name}"
+      @redirect '/'
+
 
   @client '/bootstrap.js': ->
     window.view =
-      context : ko.observable ''
+      ObjectInfo : ko.observable []
 
 
   # ==== clinet wewbsocket ====
@@ -85,26 +126,53 @@ require('zappa') 4444, ->
       grr.render_map()
 
     @on update: ->
+      view.ObjectInfo @data.objs
       grr.render @data
 
-    $ =>
-      window.grr = new GameRenderer
-      ko.applyBindings view
 
   # ==== server wewbsocket ====
+
   @on connection: ->
     d "Connected: #{@id}"
-    game.stage.join(@id)
+    # game.stage.join(@id)
     @emit 'connection',map:game.stage._map,uid:@id
-    d "players:"+(k for k,v of game.stage.players).join()
+    # d "players:"+(k for k,v of game.stage.players).join()
 
   @on disconnect: ->
+    char = game.stage.players[@id]
+    save @id,char.name,char
+
     game.stage.leave(@id)
     d "Disconnected: #{@id}"
     d "players:"+(k for k,v of game.stage.players).join()
 
   @on keydown: ->
-    game.stage.players[@id].keys[@data.code] = 1
+    game.stage.players[@id]?.keys[@data.code] = 1
 
   @on keyup: ->
-    game.stage.players[@id].keys[@data.code] = 0
+    game.stage.players[@id]?.keys[@data.code] = 0
+
+  @on setname: ->
+    name = @data.name
+    users.findOne {name:name},(e,item)=>
+      if item
+        d "[load] #{@data.name}"
+        game.stage.join(@id,name,item)
+      else
+        d "[create] #{@data.name}"
+        item =
+          name: name
+          lv: 1
+          exp: 0
+          sp : 0
+        users.insert item
+        game.stage.join(@id,name,item)
+
+  @on save: ->
+    save @id,@data.name
+
+  setInterval ->
+    d "inteval save"
+    for k,v of game.stage.players
+      save v.id,v.name
+  ,1000*60*15
