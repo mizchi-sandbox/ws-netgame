@@ -34,6 +34,7 @@ require('zappa') 4444, ->
     ret = objs.map (i)->
       name: i.name
       lv: i.status.lv
+      ct : (v.ct for _,v of i.skills)
       exp: ~~(100*i.status.exp/i.status.next_lv)
       hp : ~~(100*i.status.hp/i.status.MAX_HP)
       x: i.x
@@ -44,15 +45,18 @@ require('zappa') 4444, ->
     @io.sockets.emit 'update',
       objs: ret
 
-  save = (id,name,char)->
+  save = (id,name,char,fn=->)->
     console.log id,name
     users.findOne {name:name},(e,item)=>
       if item
-        char = game.stage.players[id] or char
-        item.lv = char.status.lv
-        item.exp = char.status.exp or 0
-        item.sp = char.status.sp
-        users.save item
+        try
+          char = game.stage.players[id] or char
+          item.lv = char.status.lv
+          item.exp = char.status.exp or 0
+          item.sp = char.status.sp
+          users.save item ,-> fn()
+        catch e
+          d "resume error"
 
 
   @shared "/shared.js":->
@@ -98,10 +102,21 @@ require('zappa') 4444, ->
       @render index:
         id : @session.name
     else
-      @render login:{}
+      @render login:{layout:false}
 
   @view login:->
-    a href:"/verify",-> "login"
+    doctype 5
+    html ->
+      head lang:'ja',->
+        title 'Dia-Net'
+        (link rel:"stylesheet",type:"text/css",href:i) for i in [
+          "/bootstrap.min.css"
+        ]
+      body ->
+        div class:"container-fluid",->
+          h1 -> "Dia-Net"
+          div class:"content",->
+            a href:"/verify",-> "Twitterでログイン"
 
   twoauth = require('./twitter_oauth')
   @get '/verify' : ->
@@ -140,11 +155,11 @@ require('zappa') 4444, ->
 
   @on disconnect: ->
     char = game.stage.players[@id]
-    save @id,char.name,char
-
-    game.stage.leave(@id)
-    d "Disconnected: #{@id}"
-    d "players:"+(k for k,v of game.stage.players).join()
+    if char
+      save @id,char.name,char,=>
+        game.stage.leave(@id)
+        d "Disconnected: #{@id}"
+        d "players:"+(k for k,v of game.stage.players).join()
 
   @on keydown: ->
     game.stage.players[@id]?.keys[@data.code] = 1
@@ -169,10 +184,10 @@ require('zappa') 4444, ->
         game.stage.join(@id,name,item)
 
   @on save: ->
-    save @id,@data.name
+    save @id,@data.name,null,=>
 
   setInterval ->
     d "inteval save"
     for k,v of game.stage.players
-      save v.id,v.name
+      save v.id,v.name,null,=>
   ,1000*60*15

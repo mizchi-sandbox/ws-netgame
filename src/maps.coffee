@@ -7,7 +7,6 @@ Array::first = ()-> @[0]
 Array::last = ()-> @[@.length-1]
 Array::each = Array::forEach
 
-
 class Room
   constructor:(@map,@depth, @ax,@ay)->
     @max_size = 4
@@ -15,16 +14,18 @@ class Room
     if @depth > 0
       @next = @split()
 
-    if @ax[1]-@ax[0] < 13
-      @rx = @ax
-    else
-      cx = ~~((@ax[0]+@ax[1])/2)
-      @rx = [cx-6, cx+6]
-    if @ay[1]-@ay[0] < 13
-      @ry = @ay
-    else
-      cy = ~~((@ay[0]+@ay[1])/2)
-      @ry = [cy-6, cy+6]
+    @rx = @ax
+    @ry = @ay
+    # if @ax[1]-@ax[0] < 13
+    #   @rx = @ax
+    # else
+    #   cx = ~~((@ax[0]+@ax[1])/2)
+    #   @rx = [cx-6, cx+6]
+    # if @ay[1]-@ay[0] < 13
+    #   @ry = @ay
+    # else
+    #   cy = ~~((@ay[0]+@ay[1])/2)
+    #   @ry = [cy-6, cy+6]
 
     @center = [
       ~~((@rx[1]+@rx[0])/2)
@@ -248,7 +249,7 @@ class RandomStage extends Stage
   constructor: (@context , @cell=32) ->
     super @cell
     @_map = create_map 80,80,10
-    @max_object_count = 10      #
+    @max_object_count = 34      #
     @fcnt = 0
     @players = {}
     @objects = []
