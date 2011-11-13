@@ -1,12 +1,8 @@
 {pow,sqrt,abs,random,max,min} = Math
-{Player, Goblin,ObjectGroup} = require('./char')
+{Player, Goblin} = require('./char')
+{ObjectId} = require('./ObjectId')
 {Sprite,MoneyObject} = require('./sprites')
-Array::remove = (obj)-> @splice(@indexOf(obj),1)
-Array::size = ()-> @.length
-Array::first = ()-> @[0]
-Array::last = ()-> @[@.length-1]
-Array::each = Array::forEach
-
+require './Util'
 class Room
   constructor:(@map,@depth, @ax,@ay)->
     @max_size = 4
@@ -81,12 +77,11 @@ class Node
     @pos    = pos
     @owner_list  = null
     @parent = null
-    @hs     = Math.pow(pos[0]-@goal[0],2)+Math.pow(pos[1]-@goal[1],2)
+    @hs     = pow(pos[0]-@goal[0],2)+pow(pos[1]-@goal[1],2)
     @fs     = 0
 
   is_goal:(self)->
     return @goal == @pos
-
 
 class Stage extends Sprite
   constructor: (@cell=32) ->
@@ -145,22 +140,23 @@ class Stage extends Sprite
       return @get_rand_xy()
     return @get_point(rx,ry)
 
-
   collide: (x,y)->
     x = ~~(x / @cell)
     y = ~~(y / @cell)
     return @_map[x][y]
 
-  search_path: (start,goal)->
-    path = []
-    Node::start = start
-    Node::goal = goal
-    open_list = []
-    close_list = []
+  search_path: (start,goal,depth=100)->
+    class Node
+      start: [null,null]
+      goal: [null,null]
+      constructor:(@pos)->
+        @owner_list  = null
+        @parent = null
+        @hs     = pow(pos[0]-@goal[0],2)+pow(pos[1]-@goal[1],2)
+        @fs     = 0
 
-    start_node = new Node(Node::start)
-    start_node.fs = start_node.hs
-    open_list.push(start_node)
+      is_goal:(self)->
+        return @goal == @pos
 
     search_path =[
       [-1,-1], [ 0,-1], [ 1,-1]
@@ -168,28 +164,45 @@ class Stage extends Sprite
       [-1, 1], [ 0, 1], [ 1, 1]
     ]
 
-    max_depth = 100
-    for _ in [1..max_depth]
+    path = []
+    Node::start = start
+    Node::goal = goal
+
+    open_list = []
+    close_list = []
+    start_node = new Node(Node::start)
+    start_node.fs = start_node.hs
+    open_list.push(start_node)
+
+
+    for _ in [1..depth]
       return [] if open_list.size() < 1 #探索失敗
 
-      open_list.sort( (a,b)->a.fs-b.fs )
-      min_node = open_list[0]
-      close_list.push( open_list.shift() )
+      # ヒューリスティック関数でソート
+      open_list.sort (a,b)->a.fs-b.fs
+      min_node = open_list.first() # 最小ノードを選択
+      close_list.push open_list.shift()
+      [ mx ,my ] = min_node.pos
 
-      if min_node.pos[0] is min_node.goal[0] and min_node.pos[1] is min_node.goal[1]
+      # 到着
+      if mx is min_node.goal[0] and my is min_node.goal[1]
         path = []
         n = min_node
-        while n.parent
-          path.push(n.pos)
-          n = n.parent
+        # 親を辿る
+        path.push(n.pos) while n = n.parent
         return path.reverse()
 
       n_gs = min_node.fs - min_node.hs
 
-      for i in search_path # 8方向探索
-        [nx,ny] = [i[0]+min_node.pos[0] , i[1]+min_node.pos[1]]
-        if not @_map[nx][ny]
-          dist = Math.pow(min_node.pos[0]-nx,2) + Math.pow(min_node.pos[1]-ny,2)
+      for [x,y] in search_path
+        # 斜めの判定が可能か
+        if abs(x)+abs(y) > 1
+          unless !@_map[x+mx][my] and !@_map[mx][y+my]
+            continue
+
+        [nx,ny] = [x+mx,y+my]
+        unless @_map[nx][ny]
+          dist = pow(mx-nx,2) + pow(my-ny,2)
 
           if obj = @find(open_list,[nx,ny])
             if obj.fs > n_gs+obj.hs+dist
@@ -289,7 +302,7 @@ class RandomStage extends Stage
     if @objects.length < @max_object_count and @fcnt % 60*3 == 0
       random_point  = @get_rand_xy()
       if random() < 0.9
-        @objects.push( gob = new Goblin(random_point.x, random_point.y, ObjectGroup.Enemy) )
+        @objects.push( gob = new Goblin(@,random_point.x, random_point.y, ObjectId.Enemy) )
         console.log "pop monster:"
 
 

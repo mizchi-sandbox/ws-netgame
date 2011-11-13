@@ -98,6 +98,7 @@ require('zappa') 4444, ->
 
   @get '/': ->
     console.log @session.name
+    @session.name = "mizchi"  # for debug
     if @session.name
       @render index:
         id : @session.name
@@ -166,6 +167,9 @@ require('zappa') 4444, ->
 
   @on keyup: ->
     game.stage.players[@id]?.keys[@data.code] = 0
+
+  @on click_map: ->
+    game.stage.players[@id]?.set_destination @data.x , @data.y
 
   @on setname: ->
     name = @data.name

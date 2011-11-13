@@ -1,75 +1,65 @@
-{Sprite,ObjectGroup} = require('./sprites')
 Skill = require('./skills')
 {Weapons} = require('./equip')
-{random} = Math
+{random,sqrt,min,max} = Math
+{Sprite} = require('./sprites')
+{ObjectId} = require('./ObjectId')
+{randint} = require('./Util')
 
-Array::size = ->
-  return @length
 
-randint = (from,to)->
-  if not to?
-    to = from
-    from = 0
-  ~~(random()*(to-from+1))+from
 
 class Character extends Sprite
   scale : null
-  state : null
-  following_obj: null
-  targeting_obj: null
+  target: null
   status : {}
   _items_ : []
 
-  constructor: (@x=0,@y=0,@group=ObjectGroup.Enemy ,status={}) ->
+  constructor: (@scene , @x=0,@y=0,@group=ObjectId.Enemy ,status={}) ->
     super @x, @y
-    @state =
-      active : false
-    @targeting_obj = null
-    @dir = 0
-    @cnt = 0
-    @id = ~~(random() * 100)
-    @animation = []
-    @cnt = ~~(random() * 60)
-    @distination = [@x,@y]
-    @_path = []
     @keys = {}
-    @gold = 0
+    @target = null
+    @dir = 0
+    @id = ~~(random() * 1000)
+    @cnt = ~~(random() * 60)
 
-  regenerate: ()->
-    r = (if @targeting_obj then 2 else 1)
-    if @is_alive()
-      if @status.hp < @status.MAX_HP
-        @status.hp += 1
+    @animation = []
+    @_path = []
 
   update:(objs, cmap)->
-    @cnt += 1
+    @cnt++
     if @is_alive()
       @check()
-      @regenerate() if @cnt%60 == 0
+      @regenerate() if @cnt%30 == 0
       @search objs
       @move(objs,cmap)
       @change_skill()
       @selected_skill.update(objs)
 
+
+  regenerate: ()->
+    r = (if @target then 2 else 1)
+    if @is_alive()
+      if @status.hp < @status.MAX_HP
+        @status.hp += 1
+
   search : (objs)->
-    enemies = @find_obj(ObjectGroup.get_against(@),objs,@status.sight_range)
-    if @has_target()
-      if @targeting_obj.is_dead() or @get_distance(@targeting_obj) > @status.sight_range*1.5
-        console.log "#{@name} lost track of #{@targeting_obj.name}"
-        @targeting_obj = null
+    enemies = @find_obj(ObjectId.get_enemy(@),objs,@status.sight_range)
+    if @target
+      if @target.is_dead() or @get_distance(@target) > @status.sight_range*1.5
+        console.log "#{@name} lost track of #{@target.name}"
+        @target = null
     else if enemies.length > 0
-      @targeting_obj = enemies[0]
-      console.log "#{@name} find #{@targeting_obj.name}"
+      @target = enemies[0]
+      console.log "#{@name} find #{@target.name}"
 
   move: (objs ,cmap)->
     # for wait
-    if @has_target()
-      @set_dir(@targeting_obj.x,@targeting_obj.y)
-      return if @get_distance(@targeting_obj) < @selected_skill.range
+    if !!@target
+      @set_dir(@target.x,@target.y)
+      return if @get_distance(@target) < @selected_skill.range
     else
       return if @cnt%60 < 15
 
-    if @has_target() and @cnt%60 is 0
+    if !!@target and @cnt%60 is 0
       @_update_path(cmap)
 
     if @to
@@ -83,7 +73,7 @@ class Character extends Sprite
         else
           @to = null
     else
-      if @has_target()
+      if !!@target
         @_update_path(cmap)
       else
         c = cmap.get_cell(@x,@y)
@@ -112,12 +102,12 @@ class Character extends Sprite
 
   get_param:(param)->
     (item?[param] or 0 for at,item of @_equips_).reduce (x,y)-> x+y
-    #
+
   die : (actor)->
     @cnt = 0
-    if @group is ObjectGroup.Enemy
+    if @group is ObjectId.Enemy
       gold = randint(0,100)
-      actor.gold += gold
+      actor.status.gold += gold
     # actor.status.get_exp(@status.lv*10)
     actor.status.get_exp(@status.lv*10)
     console.log "#{@name} is killed by #{actor.name}." if actor
@@ -142,7 +132,7 @@ class Character extends Sprite
 
   _get_path:(map)->
     from = map.get_cell( @x ,@y)
-    to = map.get_cell( @targeting_obj.x ,@targeting_obj.y)
+    to = map.get_cell( @target.x ,@target.y)
     return map.search_path( [from.x,from.y] ,[to.x,to.y] )
 
   _trace: (to_x , to_y)->
@@ -153,21 +143,8 @@ class Character extends Sprite
     ]
 
 
-  has_target:()->
-    if @targeting_obj isnt null then true else false
-
-  is_following:()->
-    if @following_obj isnt null then true else false
-
-  is_alive:()->
-    return @status.hp > 1
-
-  is_dead:()->
-    not @is_alive()
-
-  find_obj:(group_id,targets, range)->
-    targets.filter (t)=>
-      t.group is group_id and @get_distance(t) < range and t.is_alive()
+  is_alive:()-> @status.hp > 1
+  is_dead:()-> ! @is_alive()
 
   set_dir: (x,y)->
     rx = x - @x
@@ -181,26 +158,26 @@ class Character extends Sprite
     @status.hp = @status.MAX_HP if @status.hp > @status.MAX_HP
     @status.hp = 0 if @status.hp < 0
     if @is_alive()
-      if @targeting_obj?.is_dead()
-         @targeting_obj = null
+      if @target?.is_dead()
+         @target = null
     else
-      @targeting_obj = null
+      @target = null
 
   shift_target:(targets)->
-    if @has_target() and targets.length > 0
-      if not @targeting_obj in targets
-        @targeting_obj = targets[0]
+    if @target and targets.length > 0
+      if not @target in targets
+        @target = targets[0]
         return
       else if targets.size() == 1
-        @targeting_obj = targets[0]
+        @target = targets[0]
         return
       if targets.size() > 1
-        cur = targets.indexOf @targeting_obj
+        cur = targets.indexOf @target
         if cur+1 >= targets.size()
           cur = 0
         else
           cur += 1
-        @targeting_obj = targets[cur]
+        @target = targets[cur]
 
   add_animation:(animation)->
     @animation.push(animation)
@@ -208,11 +185,11 @@ class Character extends Sprite
 class Goblin extends Character
   name : "Goblin"
   scale : 1
-  constructor: (@x,@y,@group,lv=1) ->
+  constructor: (@scene , @x,@y,@group,lv=1) ->
+    @id = ObjectId.Monster
     @dir = 0
     @status = new Status {str: 8, int: 4, dex:6},{},1
-
-    super(@x,@y,@group,@status)
+    super(@scene ,@x,@y,@group,@status)
     @skills =
       one: new Skill.Skill_Atack(@,3)
       two: new Skill.Skill_Heal(@)
@@ -237,14 +214,11 @@ class Goblin extends Character
 
   exec:(actor,objs)->
     super actor,objs
-    if actor.has_target()
-      actor.targeting_obj.add_animation new Anim.prototype[@effect] amount, @size
 
 class Player extends Character
   scale : 8
-  constructor: (@scene, @x,@y,param = {},@group=ObjectGroup.Player) ->
-    console.log "player const lv "+param.lv
-    super(@x,@y,@group)
+  constructor: (@scene, @x,@y,param = {},@group=ObjectId.Player) ->
+    super(@scene,@x,@y,@group)
     @keys = {}
     @status = new Status {str: 10,int: 10,dex: 10},{}, param.lv,param.exp
     @skills =
@@ -263,19 +237,23 @@ class Player extends Character
     @set_skill @keys
 
   save:()->
-    @scene
-
   update:(objs, cmap)->
-    enemies = @find_obj(ObjectGroup.get_against(@),objs,@status.sight_range)
+    enemies = @find_obj(ObjectId.get_enemy(@),objs,@status.sight_range)
     if @keys.space == 2
       @shift_target(enemies)
     super objs,cmap
 
+  set_destination:(x,y)->
+    @target = x:x,y:y,is_dead:(->false),status:{get_param:->}
 
   move: (objs,cmap)->
     keys = @keys
+    sumkey = [keys.right , keys.left , keys.up , keys.down]
+    # if sumkey is  0
+    #   super(objs,cmap)
+    #   return
 
-    if keys.right + keys.left + keys.up + keys.down > 1
+    if sumkey > 1
       move = ~~(@status.speed * Math.sqrt(2)/2)
     else
       move = @status.speed
@@ -301,22 +279,11 @@ class Player extends Character
       else
         @y += move
 
-ObjectGroup =
-  Player : 0
-  Enemy  : 1
-  Item   : 2
-  is_battler : (group_id)->
-    group_id in [@Player, @Enemy]
-  get_against : (obj)->
-    switch obj.group
-      when @Player
-        return @Enemy
-      when @Enemy
-        return @Player
 
 class Status
   constructor: (params = {}, equips = {}, @lv,@exp=0) ->
     @build_status(params,equips)
+    @gold = params.gold or 0
 
     @hp = @MAX_HP
     @sp = 0
@@ -359,7 +326,6 @@ class Status
   onHealed : (amount)->
 
 
-exports.ObjectGroup = ObjectGroup
 exports.Goblin = Goblin
 exports.Player = Player
 exports.Character = Character

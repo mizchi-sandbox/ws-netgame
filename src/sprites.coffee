@@ -1,3 +1,5 @@
+{ObjectId} = require './ObjectId'
+
 class Sprite
   constructor: (@x=0,@y=0,@scale=10) ->
   get_distance: (target)->
@@ -17,9 +19,6 @@ class Sprite
   is_targeted:(objs)->
      @ in (i.targeting_obj? for i in objs)
 
-  has_target:()->
-    false
-
   is_following:()->
     false
 
@@ -32,19 +31,6 @@ class Sprite
     targets.filter (t)=>
       t.group is group_id and @get_distance(t) < range and t.is_alive()
 
-ObjectGroup =
-  Player : 0
-  Enemy  : 1
-  Item   : 2
-  is_battler : (group_id)->
-    group_id in [@Player, @Enemy]
-  get_against : (obj)->
-    switch obj.group
-      when @Player
-        return @Enemy
-      when @Enemy
-        return @Player
-
 class ItemObject extends Sprite
   size : 10
   is_alive:()->
@@ -54,7 +40,7 @@ class ItemObject extends Sprite
 
   constructor: (@x=0,@y=0) ->
     @cnt = 0
-    @group = ObjectGroup.Item
+    @group = ObjectId.Item
     @event_in = true
 
   update:(objs,map)->
@@ -93,5 +79,3 @@ GameData =
   items : []
 
 exports.Sprite = Sprite
-
-exports.ObjectGroup = ObjectGroup

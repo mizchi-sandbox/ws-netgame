@@ -1,5 +1,4 @@
-{ObjectGroup} = require './sprites'
-
+{ObjectId} = require './ObjectId'
 randint = (from,to) ->
   if not to?
     to = from
@@ -60,9 +59,9 @@ class DamageHit extends Skill
 class SingleHit extends DamageHit
   effect : 'Slash'
   _get_targets:(objs)->
-    if @actor.has_target()
-      if @actor.get_distance(@actor.targeting_obj) < @range
-        return [ @actor.targeting_obj ]
+    if @actor.target
+      if @actor.get_distance(@actor.target) < @range
+        return [ @actor.target ]
     return []
 
   _calc : (target)->
@@ -72,16 +71,16 @@ class SingleHit extends DamageHit
 class AreaHit extends DamageHit
   effect : 'Burn'
   _get_targets:(objs)->
-    return @actor.find_obj ObjectGroup.get_against(@actor), objs , @range
+    return @actor.find_obj ObjectId.get_enemy(@actor), objs , @range
   _calc : (target)->
     return ~~(@actor.status.atk * target.status.def*@damage_rate*randint(100*(1-@random_rate),100*(1+@random_rate))/100)
 
 class TargetAreaHit extends DamageHit
   effect : 'Burn'
   _get_targets:(objs)->
-    if @actor.has_target()
+    if @actor.target
       if @actor.get_distance(@actor.targeting_obj) < @range
-        return @actor.targeting_obj.find_obj ObjectGroup.get_against(@actor), objs , @range
+        return @actor.targeting_obj.find_obj ObjectId.get_enemy(@actor), objs , @range
     []
   _calc : (target)->
     return ~~(@actor.status.atk * target.status.def*@damage_rate*randint(100*(1-@random_rate),100*(1+@random_rate))/100)
@@ -174,7 +173,7 @@ class Skill_ThrowBomb extends Skill
 
   exec:(objs,mouse)->
     if @ct >= @MAX_CT
-      targets = mouse.find_obj(ObjectGroup.get_against(@actor), objs ,@range)
+      targets = mouse.find_obj(ObjectId.get_enemy(@actor), objs ,@range)
       if targets.size()>0
         for t in targets
           t.status.hp -= 20
