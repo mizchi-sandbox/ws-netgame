@@ -1,17 +1,12 @@
 Skill = require('./skills')
 {Weapons} = require('./equip')
-{random,sqrt,min,max} = Math
+{random,sqrt,min,max,sin,cos} = Math
 {Sprite} = require('./sprites')
 {ObjectId} = require('./ObjectId')
 {randint} = require('./Util')
 
-
-
 class Character extends Sprite
   scale : null
-  target: null
-  status : {}
-  _items_ : []
 
   constructor: (@scene , @x=0,@y=0,@group=ObjectId.Enemy ,status={}) ->
     super @x, @y
@@ -20,27 +15,48 @@ class Character extends Sprite
     @dir = 0
     @id = ~~(random() * 1000)
     @cnt = ~~(random() * 60)
+    @_items_ = []
 
     @animation = []
     @_path = []
 
-  update:(objs, cmap)->
+  update:(objs)->
     @cnt++
     if @is_alive()
-      @check()
-      @regenerate() if @cnt%30 == 0
-      @search objs
-      @move(objs,cmap)
-      @change_skill()
-      @selected_skill.update(objs)
+      @affected()
+      target = @recognize(objs)
+      @action(target)
 
+  affected:()->
+    @check(@status)
+    @regenerate() if @cnt%30 == 0
+
+  recognize: (objs)->
+    @search objs
+    @select_skill()
+    return objs
+
+  action:(target)->
+    @move()
+    @selected_skill.update(target)
+
+
+  # affected
+  check:(st)->
+    st.hp = st.MAX_HP if st.hp > st.MAX_HP
+    st.hp = 0 if st.hp < 0
+    if @is_alive()
+      if @target?.is_dead()
+         @target = null
+    else
+      @target = null
 
   regenerate: ()->
     r = (if @target then 2 else 1)
-    if @is_alive()
-      if @status.hp < @status.MAX_HP
-        @status.hp += 1
+    if @status.hp < @status.MAX_HP
+      @status.hp += 1
 
+  # recognize
   search : (objs)->
     enemies = @find_obj(ObjectId.get_enemy(@),objs,@status.sight_range)
     if @target
@@ -48,120 +64,86 @@ class Character extends Sprite
         console.log "#{@name} lost track of #{@target.name}"
         @target = null
     else if enemies.length > 0
-      @target = enemies[0]
+      @target = enemies.first()
       console.log "#{@name} find #{@target.name}"
 
-  move: (objs ,cmap)->
-    # for wait
-    if !!@target
+  select_skill: ()->
+    @selected_skill = new Skill.Skill_Atack(@)
+
+  # action
+  is_waiting : ()->
+    if @target
       @set_dir(@target.x,@target.y)
-      return if @get_distance(@target) < @selected_skill.range
+      return true if @get_distance(@target) < @selected_skill.range
+    else if @group isnt ObjectId.Player
+      return true if @cnt%60 < 15
+    return false
+
+  update_path : (fp ,tp )->
+    [fx ,fy] = fp
+    from = @scene.get_cell(fx ,fy)
+    [tx ,ty] = tp
+    to = @scene.get_cell( tx ,ty)
+
+    @_path = @scene.search_path( from ,to )
+    @to = @_path.shift()
+
+  wander : ()->
+    [tx,ty] = @scene.get_cell(@x,@y)
+    @to = [tx+randint(-1,1),ty+randint(-1,1)]
+
+  step_forward: (to_x , to_y, wide)->
+    @set_dir(to_x,to_y)
+    [
+      @x + ~~(wide * cos(@dir)),
+      @y + ~~(wide * sin(@dir))
+    ]
+
+  move: ()->
+    return if @is_waiting()
+
+    if @destination
+      @update_path( [@x,@y],[@destination.x,@destination.y] )
+      @destination = null
+
+    unless @to
+      # 優先度 destination(人為設定) > target(ターゲット) > follow(リーダー)
+      if @target
+        @update_path( [@x,@y],[@target.x,@target.y] )
+      else if @follow
+        @update_path( [@x,@y],[@follow.x,@follow.y] )
+      else
+        @wander()
+
     else
-      return if @cnt%60 < 15
-
-    if !!@target and @cnt%60 is 0
-      @_update_path(cmap)
-
-    if @to
-    # 目的地が設定されてる場合
-      dp = cmap.get_point(@to[0],@to[1])
-      [nx,ny] = @_trace( dp.x , dp.y )
       wide = @status.speed
-      if dp.x-wide<nx<dp.x+wide and dp.y-wide<ny<dp.y+wide
+      [dx,dy] = @scene.get_point(@to[0],@to[1])
+      [nx,ny] = @step_forward( dx , dy ,wide)
+      if dx-wide<nx<dx+wide and dy-wide<ny<dy+wide
         if @_path.length > 0
           @to = @_path.shift()
         else
           @to = null
-    else
-      if !!@target
-        @_update_path(cmap)
-      else
-        c = cmap.get_cell(@x,@y)
-        @to = [c.x+randint(-1,1),c.y+randint(-1,1)]
 
-    if not cmap.collide( nx,ny )
+    # 衝突判定
+    unless @scene.collide( nx,ny )
       @x = nx if nx?
       @y = ny if ny?
 
+    # 引っかかってる場合
     if @x is @_lx_ and @y is @_ly_
-      c = cmap.get_cell(@x,@y)
-      @to = [c.x+randint(-1,1),c.y+randint(-1,1)]
+      @wander()
+      # [cx,cy] = @scene.get_cell(@x,@y)
+      # @to = [cx+randint(-1,1),cy+randint(-1,1)]
     @_lx_ = @x
     @_ly_ = @y
-
-  equip : (item)->
-    if item.at in (k for k,v of @_equips_)
-      @_equips_[item.at] = item
-    false
-
-  get_item:(item)->
-    @_items_.push(item)
-
-  use_item:(item)->
-    @_items_.remove(item)
-
-  get_param:(param)->
-    (item?[param] or 0 for at,item of @_equips_).reduce (x,y)-> x+y
 
   die : (actor)->
     @cnt = 0
     if @group is ObjectId.Enemy
-      gold = randint(0,100)
-      actor.status.gold += gold
-    # actor.status.get_exp(@status.lv*10)
+      actor.status.gold += ~~(random()*100)
     actor.status.get_exp(@status.lv*10)
     console.log "#{@name} is killed by #{actor.name}." if actor
-    console.log "You got #{gold}G." if gold
-
-  add_damage : (actor, amount)->
-    before = @is_alive()
-    @status.hp -= amount
-    @die(actor) if @is_dead() and before
-    return @is_alive()
-
-  set_skill :()->
-    for k,v of @keys
-      # if v and k in ["zero","one","two","three","four","five","six","seven","eight","nine"]
-      if v and k in ["one","two","three","four"]
-        @selected_skill = @skills[k]
-        break
-
-  _update_path : (cmap)->
-    @_path = @_get_path(cmap)
-    @to = @_path.shift()
-
-  _get_path:(map)->
-    from = map.get_cell( @x ,@y)
-    to = map.get_cell( @target.x ,@target.y)
-    return map.search_path( [from.x,from.y] ,[to.x,to.y] )
-
-  _trace: (to_x , to_y)->
-    @set_dir(to_x,to_y)
-    return [
-      @x + ~~(@status.speed * Math.cos(@dir)),
-      @y + ~~(@status.speed * Math.sin(@dir))
-    ]
-
-
-  is_alive:()-> @status.hp > 1
-  is_dead:()-> ! @is_alive()
-
-  set_dir: (x,y)->
-    rx = x - @x
-    ry = y - @y
-    if rx >= 0
-      @dir = Math.atan( ry / rx  )
-    else
-      @dir = Math.PI - Math.atan( ry / - rx  )
-
-  check:()->
-    @status.hp = @status.MAX_HP if @status.hp > @status.MAX_HP
-    @status.hp = 0 if @status.hp < 0
-    if @is_alive()
-      if @target?.is_dead()
-         @target = null
-    else
-      @target = null
 
   shift_target:(targets)->
     if @target and targets.length > 0
@@ -178,6 +160,41 @@ class Character extends Sprite
         else
           cur += 1
         @target = targets[cur]
+
+
+  equip : (item)->
+    if item.at in (k for k,v of @_equips_)
+      @_equips_[item.at] = item
+    false
+
+  get_item:(item)->
+    @_items_.push(item)
+
+  use_item:(item)->
+    @_items_.remove(item)
+
+  get_param:(param)->
+    (item?[param] or 0 for at,item of @_equips_).reduce (x,y)-> x+y
+
+
+  add_damage : (actor, amount)->
+    before = @is_alive()
+    @status.hp -= amount
+    @die(actor) if @is_dead() and before
+    return @is_alive()
+
+
+
+  is_alive:()-> @status.hp > 1
+  is_dead:()-> ! @is_alive()
+
+  set_dir: (x,y)->
+    rx = x - @x
+    ry = y - @y
+    if rx >= 0
+      @dir = Math.atan( ry / rx  )
+    else
+      @dir = Math.PI - Math.atan( ry / - rx  )
 
   add_animation:(animation)->
     @animation.push(animation)
@@ -199,7 +216,7 @@ class Goblin extends Character
       sub_hand : null
       body : null
 
-  change_skill: ()->
+  select_skill: ()->
     if @status.hp < 10
       last = @selected_skill
       @selected_skill = @skills['two']
@@ -233,11 +250,15 @@ class Player extends Character
       sub_hand : null
       body : null
 
-  change_skill: ()->
-    @set_skill @keys
+  select_skill :()->
+    for k,v of @keys
+      # if v and k in ["zero","one","two","three","four","five","six","seven","eight","nine"]
+      if v and k in ["one","two","three","four"]
+        return @selected_skill = @skills[k]
 
   save:()->
-  update:(objs, cmap)->
+  update:(objs)->
+    cmap = @scene
     enemies = @find_obj(ObjectId.get_enemy(@),objs,@status.sight_range)
     if @keys.space == 2
       @shift_target(enemies)
@@ -246,14 +267,20 @@ class Player extends Character
   set_destination:(x,y)->
     @target = x:x,y:y,is_dead:(->false),status:{get_param:->}
 
-  move: (objs,cmap)->
-    keys = @keys
-    sumkey = [keys.right , keys.left , keys.up , keys.down]
-    # if sumkey is  0
-    #   super(objs,cmap)
-    #   return
+  wander : ->
 
-    if sumkey > 1
+  move: ->
+    cmap = @scene
+    keys = @keys
+
+    sum = 0
+    for i in [keys.right , keys.left , keys.up , keys.down]
+      sum++ if i
+
+    if sum is 0
+      super()
+      return
+    else if sum > 1
       move = ~~(@status.speed * Math.sqrt(2)/2)
     else
       move = @status.speed

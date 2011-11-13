@@ -169,7 +169,10 @@ require('zappa') 4444, ->
     game.stage.players[@id]?.keys[@data.code] = 0
 
   @on click_map: ->
-    game.stage.players[@id]?.set_destination @data.x , @data.y
+    console.log @data.x , @data.y
+    game.stage.players[@id]?.destination =
+      x:@data.x
+      y:@data.y
 
   @on setname: ->
     name = @data.name

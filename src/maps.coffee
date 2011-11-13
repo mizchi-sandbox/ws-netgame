@@ -70,19 +70,6 @@ class Room
         @map[cx][cy] = 0
       @next.draw_path()
 
-class Node
-  start: [null,null]
-  goal: [null,null]
-  constructor:(pos)->
-    @pos    = pos
-    @owner_list  = null
-    @parent = null
-    @hs     = pow(pos[0]-@goal[0],2)+pow(pos[1]-@goal[1],2)
-    @fs     = 0
-
-  is_goal:(self)->
-    return @goal == @pos
-
 class Stage extends Sprite
   constructor: (@cell=32) ->
     super 0, 0, @cell
@@ -119,12 +106,15 @@ class Stage extends Sprite
     return map
 
   get_point: (x,y)->
-    return {x:~~((x+1/2) *  @cell ),y:~~((y+1/2) * @cell) }
+    [
+      ~~((x+1/2) * @cell)
+      ~~((y+1/2) * @cell)
+    ]
 
   get_cell: (x,y)->
     x = ~~(x / @cell)
     y = ~~(y / @cell)
-    return {x:x,y:y}
+    return [x,y]
 
   get_rand_cell_xy : ()->
     rx = ~~(Math.random()*@_map.length)
@@ -133,11 +123,11 @@ class Stage extends Sprite
       return @get_rand_cell_xy()
     return [rx,ry]
 
-  get_rand_xy: ()->
+  get_random_point: ()->
     rx = ~~(Math.random()*@_map.length)
     ry = ~~(Math.random()*@_map[0].length)
     if @_map[rx][ry]
-      return @get_rand_xy()
+      return @get_random_point()
     return @get_point(rx,ry)
 
   collide: (x,y)->
@@ -145,18 +135,15 @@ class Stage extends Sprite
     y = ~~(y / @cell)
     return @_map[x][y]
 
-  search_path: (start,goal,depth=100)->
+  search_path: (start,goal,depth=400)->
     class Node
-      start: [null,null]
-      goal: [null,null]
+      start: start
+      goal: goal
       constructor:(@pos)->
         @owner_list  = null
         @parent = null
         @hs     = pow(pos[0]-@goal[0],2)+pow(pos[1]-@goal[1],2)
         @fs     = 0
-
-      is_goal:(self)->
-        return @goal == @pos
 
     search_path =[
       [-1,-1], [ 0,-1], [ 1,-1]
@@ -165,9 +152,6 @@ class Stage extends Sprite
     ]
 
     path = []
-    Node::start = start
-    Node::goal = goal
-
     open_list = []
     close_list = []
     start_node = new Node(Node::start)
@@ -267,12 +251,12 @@ class RandomStage extends Stage
     @players = {}
     @objects = []
 
-  # get_obj:->
-  #   (for k,v of @players).concat(@objects)
+  get_objs:->
+    (v for _,v of @players).concat(@objects)
 
   join : (id,name,data={})->
-    rp  = @get_rand_xy()
-    p = @players[id] = new Player(@,rp.x,rp.y,data)
+    [rx,ry]  = @get_random_point()
+    p = @players[id] = new Player(@,rx,ry,data)
     p.id = id
     p.name = name if name?
 
@@ -285,12 +269,9 @@ class RandomStage extends Stage
     for i in objs
       i.update(objs,@)
     @sweep()
-    @pop_monster()
+    if @objects.length < @max_object_count and @fcnt % 10 is 0
+      @pop_monster()
     @fcnt++
-
-    # if @fcnt%60 is 0
-    #   console.log (k+":"+v.status.hp/v.status.MAX_HP for k,v of @players)
-    #   console.log "monsters:"+(i.status.hp/i.status.MAX_HP for i in @objects)
 
   sweep: ()->
     for i in [0 ... @objects.length]
@@ -299,11 +280,9 @@ class RandomStage extends Stage
         break
 
   pop_monster: () ->
-    if @objects.length < @max_object_count and @fcnt % 60*3 == 0
-      random_point  = @get_rand_xy()
-      if random() < 0.9
-        @objects.push( gob = new Goblin(@,random_point.x, random_point.y, ObjectId.Enemy) )
-        console.log "pop monster:"
+    [rx,ry]  = @get_random_point()
+    if random() < 0.9
+      @objects.push( gob = new Goblin(@,rx, ry, ObjectId.Enemy) )
 
 
 exports.RandomStage = RandomStage
