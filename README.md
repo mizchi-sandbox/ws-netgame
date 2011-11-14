@@ -17,11 +17,9 @@ GoogleChrome/Firefox4.0以上等、WebSocket対応ブラウザに対応。スマ
 実行
 ---------
 
-$ npm install zappa
-$ coffee app.coffee
-$ open http://localhost:3000
+$ npm install zappa nstore  
+$ mv config-sample.coffee config.coffee  
+$ coffee app.coffee  
+$ open http://localhost:4444  
 
 
-ライセンス
-------------
-修正BSD
