@@ -74,8 +74,4 @@ class TresureObject extends ItemObject
   event : (objs,map , keys ,mouse,player)->
     console.log "You got a item#{@potential}"
 
-GameData =
-  gold : 0
-  items : []
-
 exports.Sprite = Sprite

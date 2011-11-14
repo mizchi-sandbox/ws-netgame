@@ -43,7 +43,7 @@ class Character extends Sprite
 
   # affected
   check:(st)->
-    st.hp = st.MAX_HP if st.hp > st.MAX_HP
+    st.hp = st.HP if st.hp > st.HP
     st.hp = 0 if st.hp < 0
     if @is_alive()
       if @target?.is_dead()
@@ -53,7 +53,7 @@ class Character extends Sprite
 
   regenerate: ()->
     r = (if @target then 2 else 1)
-    if @status.hp < @status.MAX_HP
+    if @status.hp < @status.HP
       @status.hp += 1
 
   # recognize
@@ -68,7 +68,7 @@ class Character extends Sprite
       console.log "#{@name} find #{@target.name}"
 
   select_skill: ()->
-    @selected_skill = new Skill.Skill_Atack(@)
+    @selected_skill = new Skill.Atack(@)
 
   # action
   is_waiting : ()->
@@ -133,8 +133,6 @@ class Character extends Sprite
     # 引っかかってる場合
     if @x is @_lx_ and @y is @_ly_
       @wander()
-      # [cx,cy] = @scene.get_cell(@x,@y)
-      # @to = [cx+randint(-1,1),cy+randint(-1,1)]
     @_lx_ = @x
     @_ly_ = @y
 
@@ -205,11 +203,11 @@ class Goblin extends Character
   constructor: (@scene , @x,@y,@group,lv=1) ->
     @id = ObjectId.Monster
     @dir = 0
-    @status = new Status {str: 8, int: 4, dex:6},{},1
+    @status = new Status {str: 8, int: 4, dex:6},1
     super(@scene ,@x,@y,@group,@status)
     @skills =
-      one: new Skill.Skill_Atack(@,3)
-      two: new Skill.Skill_Heal(@)
+      one: new Skill.Atack(@,3)
+      two: new Skill.Heal(@)
     @selected_skill = @skills['one']
     @_equips_ =
       main_hand : new Weapons::Dagger
@@ -233,18 +231,18 @@ class Goblin extends Character
     super actor,objs
 
 class Player extends Character
+  # Controller Implement
   scale : 8
   constructor: (@scene, @x,@y,param = {},@group=ObjectId.Player) ->
     super(@scene,@x,@y,@group)
     @keys = {}
-    @status = new Status {str: 10,int: 10,dex: 10},{}, param.lv,param.exp
+    @status = new Status {str: 10,int: 10,dex: 10},param.lv,param.exp
     @skills =
-      one: new Skill.Skill_Atack(@)
-      two: new Skill.Skill_Smash(@)
-      three: new Skill.Skill_Heal(@)
-      four: new Skill.Skill_Meteor(@)
+      one: new Skill.Atack(@)
+      two: new Skill.Smash(@)
+      three: new Skill.Heal(@)
+      four: new Skill.Meteor(@)
     @selected_skill = @skills['one']
-
     @_equips_ =
       main_hand : new Weapons::Blade
       sub_hand : null
@@ -278,12 +276,17 @@ class Player extends Character
       sum++ if i
 
     if sum is 0
-      super()
-      return
+      if ++@_wait > 120
+        return
+      else
+        super()
+        return
     else if sum > 1
-      move = ~~(@status.speed * Math.sqrt(2)/2)
+      move = ~~(@status.speed * 0.7 )
     else
       move = @status.speed
+    @to = null
+    @_wait = 0
 
     if keys.right
       if cmap.collide( @x+move , @y )
@@ -308,11 +311,11 @@ class Player extends Character
 
 
 class Status
-  constructor: (params = {}, equips = {}, @lv,@exp=0) ->
-    @build_status(params,equips)
+  constructor: (params = {}, @lv,@exp=0) ->
+    @build_status(params)
     @gold = params.gold or 0
 
-    @hp = @MAX_HP
+    @hp = @HP
     @sp = 0
     @next_lv = @lv * 50
 
@@ -320,8 +323,8 @@ class Status
     @INT = params.int
     @DEX = params.dex
 
-  build_status:(params={},equips)->
-    @MAX_HP = params.str*10
+  build_status:(params={})->
+    @HP = params.str*10
 
     @atk = params.str
     @mgc = params.int

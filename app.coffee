@@ -27,37 +27,7 @@ require('zappa') 4444, ->
   @app.use @express.favicon()
 
   @set 'views', __dirname + '/views'
-
   @enable 'serve jquery'
-  game.ws = =>
-    objs = game.stage.objects.concat (v for k,v of game.stage.players)
-    ret = objs.map (i)->
-      name: i.name
-      lv: i.status.lv
-      ct : (v.ct for _,v of i.skills)
-      exp: ~~(100*i.status.exp/i.status.next_lv)
-      hp : ~~(100*i.status.hp/i.status.MAX_HP)
-      x: i.x
-      y: i.y
-      id: String(i.id or 0)
-      skill : i.selected_skill.name
-
-    @io.sockets.emit 'update',
-      objs: ret
-
-  save = (id,name,char,fn=->)->
-    console.log id,name
-    users.findOne {name:name},(e,item)=>
-      if item
-        try
-          char = game.stage.players[id] or char
-          item.lv = char.status.lv
-          item.exp = char.status.exp or 0
-          item.sp = char.status.sp
-          users.save item ,-> fn()
-        catch e
-          d "resume error"
-
 
   @shared "/shared.js":->
     r = window ? global
@@ -98,26 +68,12 @@ require('zappa') 4444, ->
 
   @get '/': ->
     console.log @session.name
-    @session.name = "mizchi"  # for debug
+    # @session.name = "mizchi"  # for debug
     if @session.name
       @render index:
         id : @session.name
     else
       @render login:{layout:false}
-
-  @view login:->
-    doctype 5
-    html ->
-      head lang:'ja',->
-        title 'Dia-Net'
-        (link rel:"stylesheet",type:"text/css",href:i) for i in [
-          "/bootstrap.min.css"
-        ]
-      body ->
-        div class:"container-fluid",->
-          h1 -> "Dia-Net"
-          div class:"content",->
-            a href:"/verify",-> "Twitterでログイン"
 
   twoauth = require('./twitter_oauth')
   @get '/verify' : ->
@@ -126,11 +82,51 @@ require('zappa') 4444, ->
       console.log "[login] #{results.screen_name}"
       @redirect '/'
 
-
   @client '/bootstrap.js': ->
     window.view =
       ObjectInfo : ko.observable []
+      CoolTime : ko.observable []
 
+  save = (id,name,char,fn=->)->
+    console.log id,name
+    users.findOne {name:name},(e,item)=>
+      if item
+        try
+          char = game.stage.players[id] or char
+          item.lv = char.status.lv
+          item.exp = char.status.exp or 0
+          item.sp = char.status.sp
+          users.save item ,-> fn()
+        catch e
+          d "resume error"
+
+  # emitter for client
+  game.ws = =>
+    objs = game.stage.objects.concat (v for k,v of game.stage.players)
+    # ret = objs.map (i)->
+    #   name: i.name
+    #   lv: i.status.lv
+    #   ct : (v.ct for _,v of i.skills)
+    #   exp: ~~(100*i.status.exp/i.status.next_lv)
+    #   hp : ~~(100*i.status.hp/i.status.HP)
+    #   x: i.x
+    #   y: i.y
+    #   id: String(i.id or 0)
+    #   skill : i.selected_skill.name
+    ret = objs.map (i)->
+      o:[i.x,i.y,i.id,i.group]
+      s:
+        n : i.name
+        hp :~~(100*i.status.hp/i.status.HP)
+        lv: i.status.lv
+      a:[]
+
+    @io.sockets.emit 'update',
+      objs: ret
+
+    for id,player of game.stage.players
+      @io.sockets.socket(id).emit 'update_ct',
+        cooltime: ({rate:~~(100*skill.ct/skill.CT),name:skill.name,pos:key} for key,skill of player.skills)
 
   # ==== clinet wewbsocket ====
   @client '/index.js': ->
@@ -145,14 +141,14 @@ require('zappa') 4444, ->
       view.ObjectInfo @data.objs
       grr.render @data
 
+    @on update_ct: ->
+      view.CoolTime @data.cooltime
 
   # ==== server wewbsocket ====
 
   @on connection: ->
     d "Connected: #{@id}"
-    # game.stage.join(@id)
     @emit 'connection',map:game.stage._map,uid:@id
-    # d "players:"+(k for k,v of game.stage.players).join()
 
   @on disconnect: ->
     char = game.stage.players[@id]
@@ -160,7 +156,6 @@ require('zappa') 4444, ->
       save @id,char.name,char,=>
         game.stage.leave(@id)
         d "Disconnected: #{@id}"
-        d "players:"+(k for k,v of game.stage.players).join()
 
   @on keydown: ->
     game.stage.players[@id]?.keys[@data.code] = 1
@@ -198,3 +193,19 @@ require('zappa') 4444, ->
     for k,v of game.stage.players
       save v.id,v.name,null,=>
   ,1000*60*15
+
+
+  @view login:->
+    doctype 5
+    html ->
+      head lang:'ja',->
+        title 'Dia-Net'
+        (link rel:"stylesheet",type:"text/css",href:i) for i in [
+          "/bootstrap.min.css"
+        ]
+      body ->
+        div class:"container-fluid",->
+          h1 -> "Dia-Net"
+          div class:"content",->
+            a href:"/verify",-> "Twitterでログイン"
+

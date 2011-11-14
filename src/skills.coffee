@@ -8,11 +8,11 @@ randint = (from,to) ->
 class Skill
   constructor: (@actor,@lv=1) ->
     @_build(@lv)
-    @MAX_CT = @CT * 30
-    @ct = @MAX_CT
+    @CT = @BCT * 30
+    @ct = @CT
 
   charge:(is_selected)->
-    if @ct < @MAX_CT
+    if @ct < @CT
       if is_selected
         @ct += @fg_charge
       else
@@ -31,7 +31,7 @@ class Skill
 class DamageHit extends Skill
   range : 30
   auto: true
-  CT : 1
+  BCT : 1
   bg_charge : 0.2
   fg_charge : 1
   damage_rate : 1.0
@@ -47,7 +47,7 @@ class DamageHit extends Skill
   exec:(objs)->
     targets = @_get_targets(objs)
     # console.log @actor.name+":"+@name+":"+@ct/@MAX_CT
-    if @ct >= @MAX_CT and targets.length > 0
+    if @ct >= @CT and targets.length > 0
       for t in targets
         amount = @_calc t
         t.add_damage(@actor,amount)
@@ -90,10 +90,10 @@ class TargetAreaHit extends DamageHit
     # if res
     #   @actor.targeting_obj.add_animation new Anim.prototype[@effect] null, @range*1.5
 
-class Skill_Atack extends SingleHit
+class Atack extends SingleHit
   name : "Atack"
   range : 60
-  CT : 1
+  BCT : 1
   auto: true
   bg_charge : 0.2
   fg_charge : 1
@@ -111,10 +111,10 @@ class Skill_Atack extends SingleHit
   #   super objs
   #   console.log @name
 
-class Skill_Smash extends SingleHit
+class Smash extends SingleHit
   name : "Smash"
   range : 60
-  CT : 2
+  BCT : 2
   damage_rate : 2.2
   random_rate : 0.5
   bg_charge : 0.5
@@ -129,11 +129,11 @@ class Skill_Smash extends SingleHit
   _calc : (target)->
     return ~~(@actor.status.atk * target.status.def*@damage_rate*randint(100*(1-@random_rate),100*(1+@random_rate))/100)
 
-class Skill_Meteor extends AreaHit
+class Meteor extends AreaHit
   name : "Meteor"
   range : 80
   auto: true
-  CT : 4
+  BCT : 4
   damage_rate : 5
   random_rate : 0.1
 
@@ -144,26 +144,26 @@ class Skill_Meteor extends AreaHit
   _calc : (target)->
     return ~~(@actor.status.atk * target.status.def*@damage_rate*randint(100*(1-@random_rate),100*(1+@random_rate))/100)
 
-class Skill_Heal extends Skill
+class Heal extends Skill
   name : "Heal"
   range : 0
   auto: false
-  CT : 4
+  BCT : 4
   bg_charge : 0.5
   fg_charge : 1
 
   exec:()->
     target = @actor
-    if @ct >= @MAX_CT
+    if @ct >= @CT
       target.status.hp += 30
       @ct = 0
       console.log "do healing"
 
-class Skill_ThrowBomb extends Skill
+class ThrowBomb extends Skill
   name : "Throw Bomb"
   range : 120
   auto: true
-  CT : 4
+  BCT : 4
   bg_charge : 0.5
   fg_charge : 1
   constructor: (@lv=1) ->
@@ -172,15 +172,15 @@ class Skill_ThrowBomb extends Skill
     @effect_range = 30
 
   exec:(objs,mouse)->
-    if @ct >= @MAX_CT
+    if @ct >= @CT
       targets = mouse.find_obj(ObjectId.get_enemy(@actor), objs ,@range)
       if targets.size()>0
         for t in targets
           t.status.hp -= 20
         @ct = 0
 
-exports.Skill_Atack = Skill_Atack
-exports.Skill_Heal = Skill_Heal
-exports.Skill_Smash = Skill_Smash
-exports.Skill_Meteor = Skill_Meteor
+exports.Atack = Atack
+exports.Heal = Heal
+exports.Smash = Smash
+exports.Meteor = Meteor
 

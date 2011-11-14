@@ -3,6 +3,7 @@
 {ObjectId} = require('./ObjectId')
 {Sprite,MoneyObject} = require('./sprites')
 require './Util'
+
 class Room
   constructor:(@map,@depth, @ax,@ay)->
     @max_size = 4
@@ -10,18 +11,20 @@ class Room
     if @depth > 0
       @next = @split()
 
-    @rx = @ax
-    @ry = @ay
-    # if @ax[1]-@ax[0] < 13
-    #   @rx = @ax
-    # else
-    #   cx = ~~((@ax[0]+@ax[1])/2)
-    #   @rx = [cx-6, cx+6]
-    # if @ay[1]-@ay[0] < 13
-    #   @ry = @ay
-    # else
-    #   cy = ~~((@ay[0]+@ay[1])/2)
-    #   @ry = [cy-6, cy+6]
+    # @rx = @ax
+    # @ry = @ay
+    max_size = 21
+    r = ~~(max_size/2)
+    if @ax[1]-@ax[0] < max_size
+      @rx = @ax
+    else
+      cx = ~~((@ax[0]+@ax[1])/2)
+      @rx = [cx-r, cx+r]
+    if @ay[1]-@ay[0] < 13
+      @ry = @ay
+    else
+      cy = ~~((@ay[0]+@ay[1])/2)
+      @ry = [cy-r, cy+r]
 
     @center = [
       ~~((@rx[1]+@rx[0])/2)
@@ -73,7 +76,7 @@ class Room
 class Stage extends Sprite
   constructor: (@cell=32) ->
     super 0, 0, @cell
-    @_map = blank(30,30) #@load(maps.debug)
+    @_map = @blank(30,30) #@load(maps.debug)
 
   find:(arr,pos)->
     for i in arr
@@ -135,7 +138,7 @@ class Stage extends Sprite
     y = ~~(y / @cell)
     return @_map[x][y]
 
-  search_path: (start,goal,depth=400)->
+  search_path: (start,goal,depth=50)->
     class Node
       start: start
       goal: goal
@@ -221,68 +224,18 @@ class Stage extends Sprite
       i[i.length-1]=1
     map
 
+  blank : (x,y)->
+    map = []
+    for i in [0 ... x]
+      map[i] = []
+      for j in [0 ... y]
+        map[i][j] = 1
+    return map
 
-blank = (x,y)->
-  map = []
-  for i in [0 ... x]
-    map[i] = []
-    for j in [0 ... y]
-      map[i][j] = 1
-  return map
-
-create_map = (x,y,depth)->
-  root = new Room(blank(x,y),depth ,[1,x-1],[1,y-1])
-  root.draw_path()
-  root.map
-
-randint = (from,to) ->
-  if not to?
-    to = from
-    from = 0
-  return ~~( Math.random()*(to-from+1))+from
+  create_map : (x,y,depth)->
+    root = new Room(@blank(x,y),depth ,[1,x-1],[1,y-1])
+    root.draw_path()
+    root.map
 
 
-class RandomStage extends Stage
-  constructor: (@context , @cell=32) ->
-    super @cell
-    @_map = create_map 80,80,10
-    @max_object_count = 34      #
-    @fcnt = 0
-    @players = {}
-    @objects = []
-
-  get_objs:->
-    (v for _,v of @players).concat(@objects)
-
-  join : (id,name,data={})->
-    [rx,ry]  = @get_random_point()
-    p = @players[id] = new Player(@,rx,ry,data)
-    p.id = id
-    p.name = name if name?
-
-
-  leave : (id)->
-    delete @players[id]
-
-  update:()->
-    objs = @objects.concat (v for k,v of @players)
-    for i in objs
-      i.update(objs,@)
-    @sweep()
-    if @objects.length < @max_object_count and @fcnt % 10 is 0
-      @pop_monster()
-    @fcnt++
-
-  sweep: ()->
-    for i in [0 ... @objects.length]
-      if @objects[i].is_dead() and @objects[i].cnt > 5
-        @objects.splice(i,1)
-        break
-
-  pop_monster: () ->
-    [rx,ry]  = @get_random_point()
-    if random() < 0.9
-      @objects.push( gob = new Goblin(@,rx, ry, ObjectId.Enemy) )
-
-
-exports.RandomStage = RandomStage
+exports.Stage = Stage
