@@ -14,9 +14,11 @@ div class:"container-fluid",->
   jqtpl 'sidebar', ->
     ul id:"side-menu",->
       text "{{each(i,info) ObjectInfo}}"
+      text "{{if info.o[2] > 1000 }}"
       li ->
-        p -> "${info.s.n} lv.${info.s.lv}%"
+        p -> "${info.s.n} lv.${info.s.lv}"
         p -> "HP:${info.s.hp}% "
+      text "{{/if}}"
       text "{{/each}}"
 
   # div bind template:"'sidebar'",{class:"sidebar"}

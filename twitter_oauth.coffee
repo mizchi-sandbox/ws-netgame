@@ -1,13 +1,13 @@
 OAuth = require('oauth').OAuth
 CALLBACK = "/verify"
+config = require './config'
 oauth = new OAuth(
   'https://api.twitter.com/oauth/request_token',
   'https://api.twitter.com/oauth/access_token',
-  '',
-  '',
+  config.twitter.token,
+  config.twitter.secret,
   '1.0',
-  # 'http://localhost:4444'+CALLBACK,
-  'http://w-mtlab.com:4444'+CALLBACK,
+  config.domain+':'+config.port+CALLBACK,
   'HMAC-SHA1')
 
 exports.CALLBACK = CALLBACK

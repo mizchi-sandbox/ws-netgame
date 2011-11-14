@@ -2,24 +2,17 @@
 game = new Game
 game.start()
 
-log_level = 3
+config = require './config'
+nstore = require('nstore')
+Users = nstore.new("./users.db")
 
-mongolian = require 'mongolian'
-server = new mongolian()
-db = server.db 'testdb'
-users = db.collection 'user'
-
-require('zappa') 4444, ->
-  RedisStore = require('connect-redis')(@express);
-
+require('zappa') config.port, ->
   @io.set( "log level", 1 )
-
   @app.use @express.bodyParser()
   @app.use @express.methodOverride()
   @app.use @express.cookieParser()
   @app.use @express.session
-    secret: "wowowowo"
-    store: new RedisStore
+    secret: config.session_secret
     cookie: { maxAge: 86400 * 1000 }
   @app.use @app.router
   @app.use @express.static __dirname+'/public'
@@ -76,7 +69,8 @@ require('zappa') 4444, ->
       @render login:{layout:false}
 
   twoauth = require('./twitter_oauth')
-  @get '/verify' : ->
+  verify_url = twoauth.CALLBACK
+  @get verify_url : ->
     twoauth.verify @request,@response,(token,token_secret,results)=>
       @session.name = results.screen_name
       console.log "[login] #{results.screen_name}"
@@ -87,32 +81,18 @@ require('zappa') 4444, ->
       ObjectInfo : ko.observable []
       CoolTime : ko.observable []
 
-  save = (id,name,char,fn=->)->
-    console.log id,name
-    users.findOne {name:name},(e,item)=>
-      if item
-        try
-          char = game.stage.players[id] or char
-          item.lv = char.status.lv
-          item.exp = char.status.exp or 0
-          item.sp = char.status.sp
-          users.save item ,-> fn()
-        catch e
-          d "resume error"
+  save = (char,fn=->)->
+    return fn(true,null) unless char?.name
+    Users.get char.name, (e,item)->
+      item.lv = char.status.lv
+      item.exp = char.status.exp
+      item.sp = char.status.sp
+      console.log item
+      Users.save char.name , item ,-> fn()
 
   # emitter for client
   game.ws = =>
     objs = game.stage.objects.concat (v for k,v of game.stage.players)
-    # ret = objs.map (i)->
-    #   name: i.name
-    #   lv: i.status.lv
-    #   ct : (v.ct for _,v of i.skills)
-    #   exp: ~~(100*i.status.exp/i.status.next_lv)
-    #   hp : ~~(100*i.status.hp/i.status.HP)
-    #   x: i.x
-    #   y: i.y
-    #   id: String(i.id or 0)
-    #   skill : i.selected_skill.name
     ret = objs.map (i)->
       o:[i.x,i.y,i.id,i.group]
       s:
@@ -151,11 +131,10 @@ require('zappa') 4444, ->
     @emit 'connection',map:game.stage._map,uid:@id
 
   @on disconnect: ->
+    d "Disconnected: #{@id}"
     char = game.stage.players[@id]
-    if char
-      save @id,char.name,char,=>
-        game.stage.leave(@id)
-        d "Disconnected: #{@id}"
+    save char,=>
+      game.stage.leave(@id)
 
   @on keydown: ->
     game.stage.players[@id]?.keys[@data.code] = 1
@@ -171,10 +150,10 @@ require('zappa') 4444, ->
 
   @on setname: ->
     name = @data.name
-    users.findOne {name:name},(e,item)=>
-      if item
+    Users.get name, (e,user)=>
+      if user
         d "[load] #{@data.name}"
-        game.stage.join(@id,name,item)
+        game.stage.join(@id,name,user)
       else
         d "[create] #{@data.name}"
         item =
@@ -182,16 +161,13 @@ require('zappa') 4444, ->
           lv: 1
           exp: 0
           sp : 0
-        users.insert item
+        Users.save name , item ,-> console.log 'save'+item
         game.stage.join(@id,name,item)
-
-  @on save: ->
-    save @id,@data.name,null,=>
 
   setInterval ->
     d "inteval save"
     for k,v of game.stage.players
-      save v.id,v.name,null,=>
+      save v,=>
   ,1000*60*15
 
 
