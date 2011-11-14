@@ -7,7 +7,14 @@ nstore = require('nstore')
 Users = nstore.new("./users.db")
 
 require('zappa') config.port, ->
-  @io.set( "log level", 1 )
+  @io.configure =>
+    @io.set( "log level", 1 )
+    # @io.set "authorization", (handshakeData, callback) ->
+    #   cookie = handshakeData.headers.cookie;
+    #   handshakeData.foo = cookie
+    #   console.log cookie
+    #   callback(null, true)
+
   @app.use @express.bodyParser()
   @app.use @express.methodOverride()
   @app.use @express.cookieParser()
@@ -25,14 +32,7 @@ require('zappa') config.port, ->
   @shared "/shared.js":->
     r = window ? global
     r.d = (e)->
-      if log_level > 0
-        console.log e
-    r.d1 = (e)->
-      if log_level > 1
-        console.log e
-    r.d2 = (e)->
-      if log_level > 2
-        console.log e
+      console.log e
 
     r.getkey = (keyCode) ->
       switch keyCode
@@ -69,8 +69,7 @@ require('zappa') config.port, ->
       @render login:{layout:false}
 
   twoauth = require('./twitter_oauth')
-  verify_url = twoauth.CALLBACK
-  @get verify_url : ->
+  @get '/verify' : ->
     twoauth.verify @request,@response,(token,token_secret,results)=>
       @session.name = results.screen_name
       console.log "[login] #{results.screen_name}"
