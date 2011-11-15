@@ -116,6 +116,7 @@ require('zappa') config.port, ->
 
     @on connection: ->
       grr.map = @data.map
+      grr.create_map @data.map
       grr.uid = @data.uid
       grr.render_map()
 
