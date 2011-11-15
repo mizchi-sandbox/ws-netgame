@@ -118,7 +118,6 @@ require('zappa') config.port, ->
       grr.map = @data.map
       grr.create_map @data.map
       grr.uid = @data.uid
-      grr.render_map()
 
     @on update: ->
       view.ObjectInfo @data.objs
