@@ -200,24 +200,13 @@ class Character extends Sprite
 
   toData :()->
     obj = 
-      name : @name
-      class : @class
-      race : @race
-      skills: ({key:k,name:v.name,lv:v.lv} for k,v of @skills)
-      status: 
-        exp : @status.exp
-        lv  : @status.lv
-        sp  : @status.sp 
-        hp  : @status.hp
-        HP  : @status.HP
-        mp  : @status.mp
-        MP  : @status.MP
-        str : @status.str
-        int : @status.int
-        dex : @status.dex
+      name  : @name
+      skills: (key:k, data: v.toData()  for k,v of @skills)
+      status: @status.toData()
       equip : 
         main_hand : @equip.main_hand 
         sub_hand  : @equip.sub_hand
+        body : @equip.main.hand
       items : @items
 
 class Goblin extends Character
@@ -349,17 +338,17 @@ class Status
   constructor: (params = {}, @lv,@exp=0) ->
     @build_status(params)
     @gold = params.gold or 0
-
     @hp = @HP
+    @mp = @MP
     @sp = 0
     @next_lv = @lv * 50
-
     @str = params.str
     @int = params.int
     @dex = params.dex
 
   build_status:(params={})->
     @HP = params.str*10
+    @MP = params.int*10
 
     @atk = params.str
     @mgc = params.int
@@ -388,7 +377,22 @@ class Status
     @next_lv = @lv * 30
 
   onDamaged : (amount)->
+
   onHealed : (amount)->
+  toData : ->
+    class: @class
+    race : @race
+    exp  : @exp
+    lv   : @lv
+    sp   : @sp 
+    hp   : @hp
+    HP   : @HP
+    mp   : @mp
+    MP   : @MP
+    str  : @str
+    int  : @int
+    dex  : @dex
+    gold : @gold
 
 
 exports.Goblin = Goblin

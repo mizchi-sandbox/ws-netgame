@@ -147,6 +147,7 @@ require('zappa') config.port, ->
 
   @on click_map: ->
     console.log @data.x , @data.y
+    game.stages.f1.players[@id]?._wait = 0
     game.stages.f1.players[@id]?.destination =
       x:@data.x
       y:@data.y

@@ -23,6 +23,10 @@ class Skill
       skill.charge @, skill is @
     @exec objs
 
+  toData : ->
+    name: @name
+    lv: @lv
+
   exec:(objs)->
   _build:(lv)->
   _calc:(target)-> return 1
