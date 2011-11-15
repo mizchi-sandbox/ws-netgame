@@ -5,42 +5,34 @@ bind = (text,obj={})->
   else
     obj["data-bind"] = text
   obj
+$$ = text
 
 jqtpl = (tpname,fn)->
   div bind template:"'#{tpname}'",{class:"#{tpname}"}
   script id:tpname,type:"text/html",-> fn()
 
-div class:"container-fluid",->
-  jqtpl 'sidebar', ->
-    ul id:"side-menu",->
-      text "{{each(i,info) ObjectInfo}}"
-      text "{{if info.o[2] > 1000 }}"
-      li ->
-        p -> "${info.s.n} lv.${info.s.lv}"
-        p -> "HP:${info.s.hp}% "
-      text "{{/if}}"
-      text "{{/each}}"
 
-  # div bind template:"'sidebar'",{class:"sidebar"}
-  # script id:'sidebar',type:"text/html",->
-  #   ul id:"side-menu",->
-  #     text "{{each(i,info) ObjectInfo}}"
-  #     li ->
-  #       p -> "${v.name} lv.${v.lv}:  ${v.exp}%"
-  #       p -> "HP:${v.hp}% : [${v.x},${v.y}]"
-  #     text "{{/each}}"
+div class:"container-fluid row",->
+  div class:'span3',->
+    jqtpl 'cooltime', ->
+      h3 'cooltime'
+      $$ "{{each(i,ct) CoolTime}}"
+      span "${i+1}:${ct}%/"
+      $$ "{{/each}}"
 
-  div class:"content",->
-    div class :'span14',->
+    jqtpl 'object-status', ->
+      ul id:"side-menu",->
+        $$ "{{each(i,info) ObjectInfo}}"
+        $$ "{{if info.o[2] > 1000 }}"
+        li ->
+          p -> "${info.s.n} lv.${info.s.lv} HP:${info.s.hp}%"
+        $$ "{{/if}}"
+        $$ "{{/each}}"
+
+  div class:"span12",->
       h1 ->
         text "NetGame:"
         span id:'uid',-> String @id
-
-      # div bind template:"'cooltime'",{class:"cooltime"}
-      # script id:'cooltime',type:"text/html",->
-      #   text "{{each(i,ct) CoolTime}}"
-      #   span "[${ct.pos}]${ct.name}:${ct.rate}"
-      #   text "{{/each}}"
 
       canvas id:"game",style:"float:left;background-color:gray;"
 
@@ -50,6 +42,7 @@ coffeescript ->
   canvas.width = 640
   canvas.height = 480
   $ =>
-    soc.emit 'setname', name: $("span#uid").text()
-    window.grr = new GameRenderer
-    ko.applyBindings view
+    $.get '/api/id' , (name)=>
+      soc.emit 'setname', name:name
+      window.grr = new GameRenderer
+      ko.applyBindings view

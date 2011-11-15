@@ -237,6 +237,7 @@ class Player extends Character
     super(@scene,@x,@y,@group)
     @keys = {}
     @status = new Status {str: 10,int: 10,dex: 10},param.lv,param.exp
+    @status.sight_range = 72
     @skills =
       one: new Skill.Atack(@)
       two: new Skill.Smash(@)

@@ -59,9 +59,12 @@ require('zappa') config.port, ->
     @session.destroy ()=>
       @redirect '/'
 
+  @get '/api/id': ->
+    @send @session.name or ''
+
   @get '/': ->
-    console.log @session.name
-    # @session.name = "mizchi"  # for debug
+    # console.log @session.name
+    @session.name = "mizchi"  # for debug
     if @session.name
       @render index:
         id : @session.name
@@ -91,7 +94,7 @@ require('zappa') config.port, ->
 
   # emitter for client
   game.ws = =>
-    objs = game.stage.objects.concat (v for k,v of game.stage.players)
+    objs = game.stages.f1.objects.concat (v for k,v of game.stages.f1.players)
     ret = objs.map (i)->
       o:[i.x,i.y,i.id,i.group]
       s:
@@ -103,9 +106,9 @@ require('zappa') config.port, ->
     @io.sockets.emit 'update',
       objs: ret
 
-    for id,player of game.stage.players
+    for id,player of game.stages.f1.players
       @io.sockets.socket(id).emit 'update_ct',
-        cooltime: ({rate:~~(100*skill.ct/skill.CT),name:skill.name,pos:key} for key,skill of player.skills)
+        cooltime: (~~(100*skill.ct/skill.CT) for key,skill of player.skills)
 
   # ==== clinet wewbsocket ====
   @client '/index.js': ->
@@ -127,45 +130,45 @@ require('zappa') config.port, ->
 
   @on connection: ->
     d "Connected: #{@id}"
-    @emit 'connection',map:game.stage._map,uid:@id
+    @emit 'connection',map:game.stages.f1._map,uid:@id
 
   @on disconnect: ->
     d "Disconnected: #{@id}"
-    char = game.stage.players[@id]
+    char = game.stages.f1.players[@id]
     save char,=>
-      game.stage.leave(@id)
+      game.stages.f1.leave(@id)
 
   @on keydown: ->
-    game.stage.players[@id]?.keys[@data.code] = 1
+    game.stages.f1.players[@id]?.keys[@data.code] = 1
 
   @on keyup: ->
-    game.stage.players[@id]?.keys[@data.code] = 0
+    game.stages.f1.players[@id]?.keys[@data.code] = 0
 
   @on click_map: ->
     console.log @data.x , @data.y
-    game.stage.players[@id]?.destination =
+    game.stages.f1.players[@id]?.destination =
       x:@data.x
       y:@data.y
 
   @on setname: ->
     name = @data.name
-    Users.get name, (e,user)=>
-      if user
+    Users.get name, (e,savedata)=>
+      if savedata
         d "[load] #{@data.name}"
-        game.stage.join(@id,name,user)
+        game.stages.f1.join(@id,name,savedata)
       else
         d "[create] #{@data.name}"
-        item =
-          name: name
+        savedata =
+          name: savedata
           lv: 1
           exp: 0
           sp : 0
-        Users.save name , item ,-> console.log 'save'+item
-        game.stage.join(@id,name,item)
+        Users.save name , savedata,-> console.log 'save',savedata
+        game.stages.f1.join(@id,name,savedata)
 
   setInterval ->
     d "inteval save"
-    for k,v of game.stage.players
+    for k,v of game.stages.f1.players
       save v,=>
   ,1000*60*15
 

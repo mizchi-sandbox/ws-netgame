@@ -2,24 +2,38 @@
 
 class Game
   constructor: (conf) ->
-    console.log("Welcome to the world!")
-    @stage = new RandomStage(@,32)
-    @objs = []
+    console.log("GameEngine created...")
+    @stages =
+      f1: new RandomStage(@,32)
+      f2: new RandomStage(@,32)
     @cnt = 0
+    @active = true
+    @fps = 15
+
+  login : (name,to)->
+
 
   enter: ->
-    obj.update(@objs, @stage) for obj in @objs
-    @stage.update @objs
     @cnt++
+    for floor , stage of @stages
+      ps = (v for _,v of stage.players)
+      if ps.length > 0
+        stage.update()
 
   start: () ->
-    @pid = setInterval =>
+    console.log("GameEngine started...")
+    @active = true
+    mainloop = =>
       @enter()
       @ws()
-    , 1000/15
+      if @active
+        setTimeout mainloop
+        , 1000/@fps
+    mainloop()
 
   stop :->
-    clearInterval @pid
+    console.log 'Game stopped'
+    @active = false
 
   ws :->
 

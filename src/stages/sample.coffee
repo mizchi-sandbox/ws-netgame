@@ -18,6 +18,7 @@ class RandomStage extends Stage
     (v for _,v of @players).concat(@objects)
 
   join : (id,name,data={})->
+    @context.start() unless @context.active
     [rx,ry]  = @get_random_point()
     p = @players[id] = new Player(@,rx,ry,data)
     p.id = id
