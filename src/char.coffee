@@ -1,3 +1,4 @@
+# manual backup
 Skill = require('./skills')
 {Weapons} = require('./equip')
 {random,sqrt,min,max,sin,cos} = Math
@@ -15,7 +16,7 @@ class Character extends Sprite
     @dir = 0
     @id = ~~(random() * 1000)
     @cnt = ~~(random() * 60)
-    @_items_ = []
+    @items = []
 
     @animation = []
     @_path = []
@@ -166,10 +167,10 @@ class Character extends Sprite
     false
 
   get_item:(item)->
-    @_items_.push(item)
+    @items.push(item)
 
   use_item:(item)->
-    @_items_.remove(item)
+    @items.remove(item)
 
   get_param:(param)->
     (item?[param] or 0 for at,item of @_equips_).reduce (x,y)-> x+y
@@ -197,10 +198,33 @@ class Character extends Sprite
   add_animation:(animation)->
     @animation.push(animation)
 
+  toData :()->
+    obj = 
+      name : @name
+      class : @class
+      race : @race
+      skills: ({key:k,name:v.name,lv:v.lv} for k,v of @skills)
+      status: 
+        exp : @status.exp
+        lv  : @status.lv
+        sp  : @status.sp 
+        hp  : @status.hp
+        HP  : @status.HP
+        mp  : @status.mp
+        MP  : @status.MP
+        str : @status.str
+        int : @status.int
+        dex : @status.dex
+      equip : 
+        main_hand : @equip.main_hand 
+        sub_hand  : @equip.sub_hand
+      items : @items
+
 class Goblin extends Character
   name : "Goblin"
   scale : 1
   constructor: (@scene , @x,@y,@group,lv=1) ->
+    @race = 'Goblin'
     @id = ObjectId.Monster
     @dir = 0
     @status = new Status {str: 8, int: 4, dex:6},1
@@ -235,7 +259,8 @@ class Player extends Character
   scale : 8
   constructor: (@scene, @x,@y,param = {},@group=ObjectId.Player) ->
     super(@scene,@x,@y,@group)
-    @keys = {}
+    @race = param.race or 'human'
+    @class = param.class or 'Load'
     @status = new Status {str: 10,int: 10,dex: 10},param.lv,param.exp
     @status.sight_range = 72
     @skills =
@@ -310,6 +335,15 @@ class Player extends Character
       else
         @y += move
 
+class Equipment
+  constructor:()->
+    @main_hand = null
+    @sub_hand = null
+    @body = null
+    @arm = null
+    @leg = null
+    @ring1 = null
+    @ring2 = null
 
 class Status
   constructor: (params = {}, @lv,@exp=0) ->
@@ -320,9 +354,9 @@ class Status
     @sp = 0
     @next_lv = @lv * 50
 
-    @STR = params.str
-    @INT = params.int
-    @DEX = params.dex
+    @str = params.str
+    @int = params.int
+    @dex = params.dex
 
   build_status:(params={})->
     @HP = params.str*10
@@ -330,7 +364,7 @@ class Status
     @atk = params.str
     @mgc = params.int
     @def = params.str / 10
-    @res = params.int
+    @res = params.int / 10
 
     @regenerate = ~~(params.str/10)
     @sight_range = params.dex*20
@@ -341,7 +375,7 @@ class Status
     @exp = 0
     @sp++
     @next_lv = @lv * 50
-    @build_status str:@STR,int:@INT,dex:@DEX
+    @build_status str:@str,int:@int,dex:@dex
 
   get_exp:(point)->
     console.log "get :"+point

@@ -30,11 +30,10 @@ div class:"container-fluid row",->
         $$ "{{/each}}"
 
   div class:"span12",->
-      h1 ->
-        text "NetGame:"
-        span id:'uid',-> String @id
-
-      canvas id:"game",style:"float:left;background-color:gray;"
+    h1 ->
+      text "NetGame:"
+      span id:'uid',-> String @id
+    canvas id:"game",style:"float:left;background-color:gray;"
 
 
 coffeescript ->
@@ -43,6 +42,6 @@ coffeescript ->
   canvas.height = 480
   $ =>
     $.get '/api/id' , (name)=>
-      soc.emit 'setname', name:name
+      soc.emit 'login', name:name
       window.grr = new GameRenderer
       ko.applyBindings view

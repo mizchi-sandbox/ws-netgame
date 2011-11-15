@@ -86,6 +86,7 @@ require('zappa') config.port, ->
   save = (char,fn=->)->
     return fn(true,null) unless char?.name
     Users.get char.name, (e,item)->
+      data = char.toData()
       item.lv = char.status.lv
       item.exp = char.status.exp
       item.sp = char.status.sp
@@ -150,7 +151,7 @@ require('zappa') config.port, ->
       x:@data.x
       y:@data.y
 
-  @on setname: ->
+  @on login: ->
     name = @data.name
     Users.get name, (e,savedata)=>
       if savedata

@@ -65,7 +65,7 @@ class SingleHit extends DamageHit
     return []
 
   _calc : (target)->
-    damage = ~~(@actor.status.STR * @_calc_rate(target,'slash'))
+    damage = ~~(@actor.status.str * @_calc_rate(target,'slash'))
     ~~(damage*@damage_rate*@_get_random())
 
 class AreaHit extends DamageHit
