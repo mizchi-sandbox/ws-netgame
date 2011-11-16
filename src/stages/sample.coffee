@@ -8,8 +8,8 @@ require './../Util'
 class RandomStage extends Stage
   constructor: (@context , @cell=32) ->
     super @cell
-    @_map = @create_map 80,80,10
-    @max_object_count = 34      #
+    @_map = @create_map 60,60,15
+    @max_object_count = 10
     @cnt = 0
     @players = {}
     @objects = []
@@ -19,8 +19,11 @@ class RandomStage extends Stage
 
   join : (id,name,data={})->
     @context.start() unless @context.active
+    p = @players[id] = new Player(@,data)
+
     [rx,ry]  = @get_random_point()
-    p = @players[id] = new Player(@,rx,ry,data)
+    p.set_pos rx,ry
+
     p.id = id
     p.name = name if name?
 
@@ -43,9 +46,10 @@ class RandomStage extends Stage
         break
 
   pop_monster: () ->
-    [rx,ry]  = @get_random_point()
     if random() < 0.9
-      @objects.push( gob = new Goblin(@,rx, ry, ObjectId.Enemy) )
+      [rx,ry]  = @get_random_point()
+      @objects.push( gob = new Goblin(@,ObjectId.Enemy) )
+      gob.set_pos rx,ry
 
 
 exports.RandomStage = RandomStage

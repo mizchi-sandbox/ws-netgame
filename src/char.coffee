@@ -5,6 +5,20 @@ Skill = require('./skills')
 {Sprite} = require('./sprites')
 {ObjectId} = require('./ObjectId')
 {randint} = require('./Util')
+{Atack} = require('./skills')
+Skills = require './skills'
+
+seq = ['one','two','three','four','five','six','seven','eight','nine','zero']
+class SkillBox
+  constructor:(actor , data={})->
+    @data = data
+    for i in data
+      if i.data 
+        @[i.key] = new Skills[i.data.name](actor, i.data.lv)
+
+  toData:->
+    ((key:i,data:@[i]?.toData()) for i in seq)
+
 
 class Character extends Sprite
   scale : null
@@ -16,7 +30,7 @@ class Character extends Sprite
     @dir = 0
     @id = ~~(random() * 1000)
     @cnt = ~~(random() * 60)
-    @items = []
+    @items = new ItemBox
 
     @animation = []
     @_path = []
@@ -39,7 +53,14 @@ class Character extends Sprite
 
   action:(target)->
     @move()
-    @selected_skill.update(target)
+    for i in seq
+      @skills[i].charge(true) if @skills[i]
+    # for name,skill of @skills
+    #   skill.charge(true) if skill
+      # f = skill is @selected_skill
+      # skill.charge(f) if skill
+    @selected_skill.charge(true) #update(target)
+    @selected_skill.exec(target) #update(target)
 
 
   # affected
@@ -161,19 +182,21 @@ class Character extends Sprite
         @target = targets[cur]
 
 
-  equip : (item)->
-    if item.at in (k for k,v of @_equips_)
-      @_equips_[item.at] = item
+  equip_item : (item)->
+    if item.at in (k for k,v of @equipment)
+      @equipment[item.at] = item
     false
 
   get_item:(item)->
-    @items.push(item)
+    null
+    # @items.push(item)
 
   use_item:(item)->
-    @items.remove(item)
+    # @items.remove(item)
 
   get_param:(param)->
-    (item?[param] or 0 for at,item of @_equips_).reduce (x,y)-> x+y
+    0
+    # (item?[param] or 0 for at,item of @equipment).reduce (x,y)-> x+y
 
 
   add_damage : (actor, amount)->
@@ -187,6 +210,7 @@ class Character extends Sprite
   is_alive:()-> @status.hp > 1
   is_dead:()-> ! @is_alive()
 
+  set_pos : (@x=0,@y=0)->
   set_dir: (x,y)->
     rx = x - @x
     ry = y - @y
@@ -201,38 +225,47 @@ class Character extends Sprite
   toData :()->
     obj = 
       name  : @name
-      skills: (key:k, data: v.toData()  for k,v of @skills)
+      skills: @skills.toData()
       status: @status.toData()
-      equip : 
-        main_hand : @equip.main_hand 
-        sub_hand  : @equip.sub_hand
-        body : @equip.main.hand
-      items : @items
+      equipment : @equipment.toData() 
+      items : @items.toData()
 
 class Goblin extends Character
   name : "Goblin"
   scale : 1
-  constructor: (@scene , @x,@y,@group,lv=1) ->
+  constructor: (@scene , @group,lv=1) ->
+    @set_pos()
     @race = 'Goblin'
     @id = ObjectId.Monster
     @dir = 0
-    @status = new Status {str: 8, int: 4, dex:6},1
+    @status = new Status {lv:1,str: 8, int: 4, dex:6},1
     super(@scene ,@x,@y,@group,@status)
-    @skills =
-      one: new Skill.Atack(@,3)
-      two: new Skill.Heal(@)
-    @selected_skill = @skills['one']
-    @_equips_ =
-      main_hand : new Weapons::Dagger
-      sub_hand : null
-      body : null
+    @skills = new SkillBox @,[
+      {
+        key : 'one'
+        data :
+          name : 'Atack'
+          lv   : 1
+      },
+      {
+        key : 'two'
+        data :
+          name : 'Heal'
+          lv   : 1
+      }
+    ]
+    # @skills.one = new Skill.Atack(@,3)
+    # @skills.two = new Skill.Heal(@)
+    @selected_skill = @skills.one
+    @equipment = new Equipment
+      main_hand : 
+        name : 'dagger'
+        drate : 0.7
 
   select_skill: ()->
-    if @status.hp < 10
+    if @status.hp < 5
       last = @selected_skill
       @selected_skill = @skills['two']
-      if last is @skills['one']
-        @selected_skill.ct = 0
     else
       @selected_skill = @skills['one']
 
@@ -246,34 +279,30 @@ class Goblin extends Character
 class Player extends Character
   # Controller Implement
   scale : 8
-  constructor: (@scene, @x,@y,param = {},@group=ObjectId.Player) ->
+  constructor: (@scene, data = {},@group=ObjectId.Player) ->
+    @name = data.name
+
+    @set_pos()
     super(@scene,@x,@y,@group)
-    @race = param.race or 'human'
-    @class = param.class or 'Load'
-    @status = new Status {str: 10,int: 10,dex: 10},param.lv,param.exp
+    @status = new Status data.status
+    @equipment = new Equipment data.equipment
+
+    # @skills.one = new Atack @
+    @skills = new SkillBox @,data.skills
+    @selected_skill = @skills.one
     @status.sight_range = 72
-    @skills =
-      one: new Skill.Atack(@)
-      two: new Skill.Smash(@)
-      three: new Skill.Heal(@)
-      four: new Skill.Meteor(@)
-    @selected_skill = @skills['one']
-    @_equips_ =
-      main_hand : new Weapons::Blade
-      sub_hand : null
-      body : null
 
   select_skill :()->
     for k,v of @keys
       # if v and k in ["zero","one","two","three","four","five","six","seven","eight","nine"]
       if v and k in ["one","two","three","four"]
+      # if v and k in ["one"]
         return @selected_skill = @skills[k]
 
-  save:()->
   update:(objs)->
     cmap = @scene
     enemies = @find_obj(ObjectId.get_enemy(@),objs,@status.sight_range)
-    if @keys.space == 2
+    if @keys.space is 1
       @shift_target(enemies)
     super objs,cmap
 
@@ -325,26 +354,42 @@ class Player extends Character
         @y += move
 
 class Equipment
-  constructor:()->
-    @main_hand = null
-    @sub_hand = null
-    @body = null
-    @arm = null
-    @leg = null
-    @ring1 = null
-    @ring2 = null
+  constructor:(data={})->
+    @main_hand = data.main_hand or null
+    @sub_hand = data.sub_hand or null
+    @body = data.body or null
+    @arm = data.arm or null
+    @leg = data.leg or null
+    @ring1 = data.ring1 or null
+    @ring2 = data.ring2 or null
+
+  toData : ->
+    main_hand: @main_hand
+    sub_hand : @sub_hand
+    body : @body
+    arm : @arm
+    leg : @leg
+    ring1 : @ring1
+    ring2 : @ring2
+
 
 class Status
-  constructor: (params = {}, @lv,@exp=0) ->
-    @build_status(params)
-    @gold = params.gold or 0
+  constructor: (data = {}) ->
+    @lv = data.lv or 0
+    @exp = data.exp or 0
+    @gold = data.gold or 10 
+
+    @sp = data.sp or 0  
+    @class = data.class or null
+    @race = data.race or null
+    @str = data.str or 5
+    @int = data.int or 5
+    @dex = data.dex or 5
+
+    @build_status(data)
     @hp = @HP
     @mp = @MP
-    @sp = 0
     @next_lv = @lv * 50
-    @str = params.str
-    @int = params.int
-    @dex = params.dex
 
   build_status:(params={})->
     @HP = params.str*10
@@ -393,6 +438,63 @@ class Status
     int  : @int
     dex  : @dex
     gold : @gold
+
+class ItemBox
+  constructor : (data)->
+    @items = data or []
+  toData :->
+    @items
+# crate_new 'mizchi','human','Load'
+exports.create_new = (name,race,cls)->
+  classes =
+    Load: 
+      str : 10
+      int : 10
+      dex : 10 
+
+  races =
+    human :
+      str : 0
+      int : 0
+      dex : 0
+  #mock
+  p = new Player null ,{}
+
+  st = classes[cls]
+  r = races[race]
+  st.str += r.str
+  st.int += r.int
+  st.dex += r.dex
+
+  status  = new Status st
+  status.race = race
+  status.class = cls
+  status.gold = 0
+  status.exp = 0
+  status.lv = 1
+
+  equipment = new Equipment 
+    main_hand : 'dagger'
+  items = new ItemBox {}
+
+  atack = new Skill.Atack
+  skills = new SkillBox p
+  data = 
+    name : name
+    status : status.toData()
+    equipment : equipment.toData()
+    items : items.toData()
+    skills:skills.toData()
+
+  p = new Player null , data
+  p.skills.one = new Skill.Atack p,1
+  p.skills.two = new Skill.Smash p,1
+  p.skills.three = new Skill.Heal p,1
+  p.skills.four = new Skill.Meteor p,1
+  p.selected_skill = p.skills.one
+
+  console.log p.toData()
+  p.toData()
 
 
 exports.Goblin = Goblin

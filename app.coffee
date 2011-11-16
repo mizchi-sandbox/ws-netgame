@@ -4,7 +4,10 @@ game.start()
 
 config = require './config'
 nstore = require('nstore')
-Users = nstore.new("./users.db")
+Users = nstore.new("savedata.db")
+{create_new} = require './src/char'
+util = require './src/Util'
+
 
 require('zappa') config.port, ->
   @io.configure =>
@@ -86,12 +89,11 @@ require('zappa') config.port, ->
   save = (char,fn=->)->
     return fn(true,null) unless char?.name
     Users.get char.name, (e,item)->
-      data = char.toData()
-      item.lv = char.status.lv
-      item.exp = char.status.exp
-      item.sp = char.status.sp
-      console.log item
-      Users.save char.name , item ,-> fn()
+      console.log "save : ", char.name
+      Users.save char.name , char.toData() ,(e)->
+        if e
+          console.log e
+        fn()
 
   # emitter for client
   game.ws = =>
@@ -108,8 +110,12 @@ require('zappa') config.port, ->
       objs: ret
 
     for id,player of game.stages.f1.players
-      @io.sockets.socket(id).emit 'update_ct',
-        cooltime: (~~(100*skill.ct/skill.CT) for key,skill of player.skills)
+      seq = ['one','two','three','four','five','six','seven','eight','nine','zero']
+      buff = []
+      for i in seq 
+        if s = player.skills[i]
+          buff.push ~~(100*s.ct/s.CT)
+      @io.sockets.socket(id).emit 'update_ct',cooltime:buff
 
   # ==== clinet wewbsocket ====
   @client '/index.js': ->
@@ -125,6 +131,7 @@ require('zappa') config.port, ->
       grr.render @data
 
     @on update_ct: ->
+      console.log @data.cooltime
       view.CoolTime @data.cooltime
 
   # ==== server wewbsocket ====
@@ -155,17 +162,16 @@ require('zappa') config.port, ->
   @on login: ->
     name = @data.name
     Users.get name, (e,savedata)=>
+      # if savedata
       if savedata
         d "[load] #{@data.name}"
+        d savedata
         game.stages.f1.join(@id,name,savedata)
       else
+        savedata = create_new('mizchi','human','Load')
         d "[create] #{@data.name}"
-        savedata =
-          name: savedata
-          lv: 1
-          exp: 0
-          sp : 0
-        Users.save name , savedata,-> console.log 'save',savedata
+        Users.save name , savedata,(e)->
+          console.log e if e
         game.stages.f1.join(@id,name,savedata)
 
   setInterval ->

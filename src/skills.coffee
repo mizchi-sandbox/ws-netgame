@@ -43,7 +43,8 @@ class DamageHit extends Skill
   effect : 'Slash'
 
   _calc_rate:(target,e)->
-    @actor.get_param("a_#{e}") * (1-target.get_param("r_#{e}"))
+    1
+    # @actor.get_param("a_#{e}") * (1-target.get_param("r_#{e}"))
 
   _get_random:()->
     randint(100*(1-@random_rate),100*(1+@random_rate))/100
