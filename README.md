@@ -16,12 +16,16 @@ GoogleChrome/Firefox4.0以上等、WebSocket対応ブラウザに対応。スマ
 
 緑が自分。青が他のプレーヤー。赤がモンスター。
 
-実行
+依存
 ---------
+npm install zappa oauth nstore  等  
 
-$ npm install zappa nstore  
+$ git clone git://github.com/mizchi/ws-netgame.git  
+$ cd ws-netgame  
+$ vim config-sample.coffee  # Twitterのトークンとか設定
 $ mv config-sample.coffee config.coffee  
 $ coffee app.coffee  
-$ open http://localhost:4444  
+
+http://localhost:4444 を開く  
 
 
