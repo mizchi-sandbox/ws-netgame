@@ -446,7 +446,7 @@ GameRenderer = (function() {
     return [cx + dx + 2 * dy, cy + dx - 2 * dy];
   };
   GameRenderer.prototype.render = function(data) {
-    var cx, cy, hp, i, id, lv, n, objs, oid, vx, vy, x, y, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
+    var PI, cx, cy, hp, i, id, lv, n, objs, oid, tid, toid, tvx, tvy, tx, ty, vx, vy, x, y, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
     if (data == null) {
       data = {};
     }
@@ -473,18 +473,37 @@ GameRenderer = (function() {
       if ((-64 < vx && vx < 706) && (-48 < vy && vy < 528)) {
         if (id === this.uid) {
           this.player_sp.draw(this.g, vx, vy);
+          this.g.init(Color.Blue);
         }
         if (id > 1000) {
           this.char_sp.draw(this.g, vx, vy);
+          this.g.init(Color.Green);
         } else {
           this.monster_sp.draw(this.g, vx, vy);
+          this.g.init(Color.Red);
+        }
+        if (i.t) {
+          _ref7 = i.t, tx = _ref7[0], ty = _ref7[1], tid = _ref7[2], toid = _ref7[3];
+          _ref8 = this.to_ism(tx / 32 * this.scale, ty / 32 * this.scale), tvx = _ref8[0], tvy = _ref8[1];
+          this.g.beginPath();
+          this.g.moveTo(vx, vy);
+          this.g.lineTo(tvx, tvy);
+          this.g.stroke();
+          PI = Math.PI;
+          this.g.beginPath();
+          this.g.arc(tvx, tvy, ~~(this.scale / 2), -PI / 6, PI / 6, false);
+          this.g.stroke();
+          this.g.beginPath();
+          this.g.arc(tvx, tvy, ~~(this.scale / 2), 5 * PI / 6, 7 * PI / 6, false);
+          this.g.stroke();
+          this.g.stroke();
         }
         this.g.init(Color.Black);
         this.g.fillText('' + ~~hp, vx - 6, vy - 12);
-        this.g.fillText(n, vx + 5, vy);
+        this.g.fillText(n, vx - 10, vy + 6);
       }
     }
-    return (_ref7 = this.gr_sp) != null ? _ref7.draw_upper(this.g, cx, cy) : void 0;
+    return (_ref9 = this.gr_sp) != null ? _ref9.draw_upper(this.g, cx, cy) : void 0;
   };
   return GameRenderer;
 })();

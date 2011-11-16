@@ -69,7 +69,7 @@ require('zappa') config.port, ->
 
   @get '/': ->
     console.log @session.name
-    @session.name = "mizchi"  # for debug
+    # @session.name = "mizchi"  # for debug
     if @session.name
       @render index:
         id : @session.name
@@ -110,6 +110,9 @@ require('zappa') config.port, ->
         n : i.name
         hp :~~(100*i.status.hp/i.status.HP)
         lv: i.status.lv
+      t:(unless i.target then null else [
+          i.target.x,i.target.y,i.target.id, i.target.group
+        ])
       a:[]
 
     @io.sockets.emit 'update',

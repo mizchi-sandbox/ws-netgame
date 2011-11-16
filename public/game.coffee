@@ -343,12 +343,39 @@ class GameRenderer
       if -64 < vx < 706 and -48 < vy < 528
         if id is @uid 
           @player_sp.draw(@g,vx,vy)
+          @g.init Color.Blue
         if id > 1000
           @char_sp.draw(@g,vx,vy)
+          @g.init Color.Green
         else 
           @monster_sp.draw(@g,vx,vy)
+          @g.init Color.Red
+        # drawInfo
+        if i.t
+          [tx,ty,tid,toid] = i.t
+          [tvx,tvy] = @to_ism( tx/32*@scale,ty/32*@scale)
+          # ターゲット線
+          @g.beginPath()
+          @g.moveTo vx,vy
+          @g.lineTo tvx,tvy
+          @g.stroke()
+
+          #ロックオンカーソル
+          {PI} = Math
+          # @g.init Color.i(0,0,0)
+          @g.beginPath()
+          @g.arc(tvx,tvy, ~~(@scale/2) ,-PI/6,PI/6,false)
+          @g.stroke()
+          @g.beginPath()
+          @g.arc(tvx,tvy, ~~(@scale/2) ,5*PI/6,7*PI/6,false)
+          @g.stroke()
+          # @g.moveTo tvx-@size/2-3,tvy-@size/2
+          # @g.lineTo tvx-@size-3,tvy
+          # @g.lineTo tvx-@size/2-3,tvy+@size/2
+          @g.stroke()
+
         @g.init Color.Black
         @g.fillText ''+~~(hp) , vx-6,vy-12
-        @g.fillText n , vx+5,vy
+        @g.fillText n , vx-10,vy+6
     @gr_sp?.draw_upper(@g,cx,cy)
 

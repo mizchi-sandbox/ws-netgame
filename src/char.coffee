@@ -5,20 +5,9 @@ Skill = require('./skills')
 {Sprite} = require('./sprites')
 {ObjectId} = require('./ObjectId')
 {randint} = require('./Util')
-{Atack} = require('./skills')
+{SkillBox} = require './skills'
 Skills = require './skills'
-
 seq = ['one','two','three','four','five','six','seven','eight','nine','zero']
-class SkillBox
-  constructor:(actor , data={})->
-    @data = data
-    for i in data
-      if i.data 
-        @[i.key] = new Skills[i.data.name](actor, i.data.lv)
-
-  toData:->
-    ((key:i,data:@[i]?.toData()) for i in seq)
-
 
 class Character extends Sprite
   scale : null
@@ -313,8 +302,10 @@ class Player extends Character
   update:(objs)->
     cmap = @scene
     enemies = @find_obj(ObjectId.get_enemy(@),objs,@status.active_range)
-    if @keys.space is 1
+
+    if @keys.space is 1 and @_last_space_ is 0
       @shift_target(enemies)
+    @_last_space_ = @keys.space
 
     range = @selected_skill.range
     @status.active_range = range

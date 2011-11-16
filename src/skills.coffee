@@ -1,13 +1,11 @@
 {ObjectId} = require './ObjectId'
-randint = (from,to) ->
-  if not to?
-    to = from
-    from = 0
-  ~~( Math.random()*(to-from+1))+from
+{randint} = require './Util'
+{random} = Math
+seq = ['one','two','three','four','five','six','seven','eight','nine','zero']
 
 class Skill
   constructor: (@actor,@lv=1) ->
-    @CT *= 30
+    @CT *= 15
     @ct = 0
 
   charge:(is_selected)->
@@ -71,6 +69,28 @@ class SingleHit extends DamageHit
     damage = ~~(@actor.status.str * @_calc_rate(target,'slash'))
     ~~(damage*@damage_rate*@_get_random())
 
+class ChainHit extends DamageHit
+  effect : 'Slash'
+  _get_targets:(objs)->
+    depth = 1
+    add = 1
+    if @actor.target
+      tar = []
+      if @actor.get_distance(@actor.target) < @range
+        tar.push (e = @actor.target )
+        nobjs = e.find_obj(e.group,objs,@range/2)
+        nobjs.remove e
+        if nobjs.length is 0 
+          return tar
+        if nobjs.length > 0  
+          tar.push nobjs[ ~~(nobjs.length*Math.random()) ]
+          return tar
+    return []
+
+  _calc : (target)->
+    damage = ~~(@actor.status.str * @_calc_rate(target,'slash'))
+    ~~(damage*@damage_rate*@_get_random())
+
 class AreaHit extends DamageHit
   effect : 'Burn'
   _get_targets:(objs)->
@@ -110,7 +130,7 @@ class Atack extends SingleHit
     ~~(damage*@damage_rate*@_get_random())
 
 
-class Lightning extends SingleHit
+class Lightning extends ChainHit
   constructor: () ->
     @CT = 2
     super arguments[0],arguments[1]
@@ -202,3 +222,14 @@ exports.Smash = Smash
 exports.Meteor = Meteor
 exports.Lightning = Lightning
 
+class SkillBox
+  constructor:(actor , data={})->
+    @data = data
+    for i in data
+      if i.data 
+        @[i.key] = new exports[i.data.name](actor, i.data.lv)
+
+  toData:->
+    ((key:i,data:@[i]?.toData()) for i in seq)
+
+exports.SkillBox = SkillBox
