@@ -69,7 +69,7 @@ require('zappa') config.port, ->
 
   @get '/': ->
     console.log @session.name
-    # @session.name = "mizchi"  # for debug
+    @session.name = "mizchi"  # for debug
     if @session.name
       @render index:
         id : @session.name

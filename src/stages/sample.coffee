@@ -20,6 +20,7 @@ class RandomStage extends Stage
   join : (id,name,data={},emitter)->
     @context.start() unless @context.active
     p = @players[id] = new Player(@,data)
+    p.__emitter = emitter
 
     # レベルアップ/ステータス変更時にアップデートするコールバック関数
     p.status.on_status_change = ->
@@ -53,7 +54,7 @@ class RandomStage extends Stage
       if p.is_dead() and p.cnt > 60
         console.log 'dead:',p.id,p.name
         console.log  p.toData()
-        @join p.id,p.name, p.toData()
+        @join p.id,p.name, p.toData(),p.__emitter
 
 
   pop_monster: () ->
