@@ -17,9 +17,13 @@ class RandomStage extends Stage
   get_objs:->
     (v for _,v of @players).concat(@objects)
 
-  join : (id,name,data={})->
+  join : (id,name,data={},emitter)->
     @context.start() unless @context.active
     p = @players[id] = new Player(@,data)
+
+    # レベルアップ/ステータス変更時にアップデートするコールバック関数
+    p.status.on_status_change = ->
+      emitter 'update_char', p.toData()
 
     [rx,ry]  = @get_random_point()
     p.set_pos rx,ry

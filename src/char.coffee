@@ -430,7 +430,11 @@ class Status
     @bp++ if @lv%3 is 0 
     @next_lv = @lv * 50
     @rebuild()
+    @on_status_change()
 
+
+  on_status_change :->
+    
   use_skill_point:(sname)->
     # TODO
 
@@ -439,11 +443,14 @@ class Status
       @bp--
       @[at] +=1
       @rebuild()
+
+      console.log 'call on changed'
+      @on_status_change()
       true
     else
       null
 
-  on_status_change :->
+
   get_exp:(point)->
     console.log "get :"+point
     @exp += point

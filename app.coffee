@@ -18,6 +18,7 @@ require('zappa') config.port, ->
     #   console.log cookie
     #   callback(null, true)
 
+
   @app.use @express.bodyParser()
   @app.use @express.methodOverride()
   @app.use @express.cookieParser()
@@ -57,6 +58,7 @@ require('zappa') config.port, ->
         when 57 then return 'nine'
       return String.fromCharCode(keyCode).toLowerCase()
 
+  game.sockets = @io.sockets
   # Rooting
   @get '/logout': ->
     @session.destroy ()=>
@@ -67,7 +69,7 @@ require('zappa') config.port, ->
 
   @get '/': ->
     console.log @session.name
-    # @session.name = "mizchi"  # for debug
+    @session.name = "mizchi"  # for debug
     if @session.name
       @render index:
         id : @session.name
@@ -171,8 +173,10 @@ require('zappa') config.port, ->
 
   @on use_battle_point: ->
     game.stages.f1.players[@id]?.status.use_battle_point(@data.at)
+    save game.stages.f1.players[@id],->d 'save done'
     @emit 'update_char', game.stages.f1.players[@id]?.toData()
 
+  _io = @io
   @on login: ->
     name = @data.name
     Users.get name, (e,savedata)=>
@@ -180,13 +184,16 @@ require('zappa') config.port, ->
       if savedata
         d "[load] #{@data.name}"
         d savedata
-        game.stages.f1.join(@id,name,savedata)
+        # game.stages.f1.join(@id,name,savedata)
+
       else
         savedata = create_new(name,'human','Lord')
         d "[create] #{@data.name}"
         Users.save name , savedata,(e)->
           console.log e if e
-        game.stages.f1.join(@id,name,savedata)
+
+      # soc = _io.sockets.socket(id)
+      game.stages.f1.join @id,name,savedata,@emit
       @emit 'update_char', savedata
 
   setInterval ->
