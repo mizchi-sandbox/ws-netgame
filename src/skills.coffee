@@ -7,8 +7,7 @@ randint = (from,to) ->
 
 class Skill
   constructor: (@actor,@lv=1) ->
-    @_build(@lv)
-    @CT = @BCT * 30
+    @CT *= 30
     @ct = 0
 
   charge:(is_selected)->
@@ -28,7 +27,6 @@ class Skill
     lv: @lv
 
   exec:(objs)->
-  _build:(lv)->
   _calc:(target)-> return 1
   _get_targets:(objs)-> return []
 
@@ -97,10 +95,10 @@ class TargetAreaHit extends DamageHit
 
 class Atack extends SingleHit
   constructor: () ->
+    @CT = 1
     super arguments[0],arguments[1]
     @name = "Atack"
     @range = 60
-    @BCT = 1
     @auto =  true
     @bg_charge = 0
     @fg_charge = 1
@@ -114,10 +112,10 @@ class Atack extends SingleHit
 
 class Lightning extends SingleHit
   constructor: () ->
+    @CT = 2
     super arguments[0],arguments[1]
     @name = "Lightning"
-    @range = 150
-    @BCT = 2
+    @range = 220
     @auto =  true
     @bg_charge = 0.1
     @fg_charge = 1
@@ -131,10 +129,10 @@ class Lightning extends SingleHit
 
 class Smash extends SingleHit
   constructor: ->
+    @CT = 2
     super arguments[0],arguments[1]
     @name = "Smash"
     @range = 60
-    @BCT = 2
     @damage_rate = 2.2
     @random_rate = 0.5
     @bg_charge = 0.5
@@ -146,11 +144,11 @@ class Smash extends SingleHit
 
 class Meteor extends AreaHit
   constructor: () ->
+    @CT = 4
     super arguments[0],arguments[1]
     @name = "Meteor"
     @range = 80
     @auto = true
-    @BCT = 4
     @damage_rate = 5
     @random_rate = 0.1
 
@@ -163,11 +161,11 @@ class Meteor extends AreaHit
 
 class Heal extends Skill
   constructor: () ->
+    @CT = 3
     super arguments[0],arguments[1]
     @name = "Heal"
     @range = 0
     @auto= false
-    @BCT = 4
     @bg_charge = 0.5
     @fg_charge =  1
 

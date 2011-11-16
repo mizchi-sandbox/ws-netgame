@@ -22,7 +22,7 @@ Array.prototype.last = function() {
 Array.prototype.each = Array.prototype.forEach;
 cos = Math.cos, sin = Math.sin, sqrt = Math.sqrt, abs = Math.abs;
 Color = {
-  Rンed: "rgb(255,0,0)",
+  Red: "rgb(255,0,0)",
   Blue: "rgb(0,0,255)",
   Green: "rgb(0,255,0)",
   White: "rgb(255,255,255)",

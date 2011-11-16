@@ -14,11 +14,32 @@ jqtpl = (tpname,fn)->
 
 div class:"container-fluid row",->
   div class:'span3',->
-    jqtpl 'cooltime', ->
-      h3 'cooltime'
-      $$ "{{each(i,ct) CoolTime}}"
-      span "${i+1}:${ct}%/"
-      $$ "{{/each}}"
+    jqtpl 'UserInfo', ->
+      $$ "{{if CharInfo()}}"
+      h4 -> "${CharInfo().name}"
+      p -> "${CharInfo().status.class} lv.${CharInfo().status.lv} [${CharInfo().status.race}]"
+      p -> "bp:${CharInfo().status.bp} sp:${CharInfo().status.sp}"
+
+
+      dl ->
+        dt -> "STR" 
+        dd -> "${CharInfo().status.str}"
+
+        dt -> "INT"
+        dd ->"${CharInfo().status.int}"
+
+        dt -> "DEX"
+        dd -> "${CharInfo().status.dex}"
+
+      $$ "{{/if}}"
+
+    p -> "BP消費で成長"
+    button bind(click:'use_battle_point',{target:'str',class:"btn small"}), -> ' str++'
+    $$ '&nbsp;'
+    button bind(click:'use_battle_point',{target:'int',class:'btn small'}) , -> ' int++'
+    $$ '&nbsp;'
+    button bind(click:'use_battle_point',{target:'dex',class:'btn small'}) , -> ' dex++'
+
 
     jqtpl 'object-status', ->
       ul id:"side-menu",->
@@ -30,10 +51,30 @@ div class:"container-fluid row",->
         $$ "{{/each}}"
 
   div class:"span12",->
-    h1 ->
-      text "NetGame:"
-      span id:'uid',-> String @id
+    div class:"row" , ->
+      jqtpl 'SkillInfo', ->
+        $$ "{{if CharInfo()}}"
+        $$ "{{each(i,sk) CharInfo().skills}}"
+        $$ "{{if sk.data}}"
+        div class:'span1' ,->
+          p "[${i+1}] ${sk.data.name}.${sk.data.lv}"
+          p "CT:${CoolTime()[i]}%"
+        $$ "{{/if}}"
+        $$ "{{/each}}"
+        $$ "{{/if}}"
+          # dd -> "${sk.data.name}:lv${sk.data.lv}"
+
     canvas id:"game",style:"float:left;background-color:gray;"
+
+        # $$ "{{if CharInfo()}}"
+        # dl ->
+        #   $$ "{{each(i,sk) CharInfo().skills}}"
+        #   $$ "{{if sk.data}}"
+        #   dt -> "[key${i+1}]"+"${CoolTime()[i]}"
+        #   dd -> "${sk.data.name}:lv${sk.data.lv}"
+        #   $$ "{{/if}}"
+        #   $$ "{{/each}}"
+        # $$ "{{/if}}"
 
 
 coffeescript ->

@@ -81,8 +81,11 @@ class Character extends Sprite
       if @target.is_dead() or @get_distance(@target) > @status.trace_range
         console.log "#{@name} lost track of #{@target.name}"
         @target = null
-    else if enemies.length > 0
-      enemies.sort (a,b)->
+    else if enemies.length is 1
+      @target = enemies.first()
+      console.log "#{@name} find #{@target.name}"
+    else if enemies.length > 1
+      enemies.sort (a,b)=>
         @get_distance(a) - @get_distance(b)
       @target = enemies.first()
       console.log "#{@name} find #{@target.name}"
@@ -394,30 +397,31 @@ class Status
     @gold = data.gold or 10 
 
     @sp = data.sp or 0  
-    @sp = data.bp or 0
+    @bp = data.bp or 0
     @class = data.class or null
     @race = data.race or null
     @str = data.str or 5
     @int = data.int or 5
     @dex = data.dex or 5
 
-    @build_status(data)
+    @rebuild()
+
+  rebuild:()->
+    @HP = @str*10
+    @MP = @int*10
     @hp = @HP
     @mp = @MP
+
+    @atk = @str
+    @mgc = @int
+    @def = @str / 10
+    @res = @int / 10
+
+    @regenerate = ~~(@str/10)
+    @active_range = @dex*20
+    @speed = ~~(@dex * 0.5)
+
     @next_lv = @lv * 50
-
-  build_status:(params={})->
-    @HP = params.str*10
-    @MP = params.int*10
-
-    @atk = params.str
-    @mgc = params.int
-    @def = params.str / 10
-    @res = params.int / 10
-
-    @regenerate = ~~(params.str/10)
-    @active_range = params.dex*20
-    @speed = ~~(params.dex * 0.5)
 
   level_up: ()->
     @lv++
@@ -425,8 +429,21 @@ class Status
     @sp++
     @bp++ if @lv%3 is 0 
     @next_lv = @lv * 50
-    @build_status str:@str,int:@int,dex:@dex
+    @rebuild()
 
+  use_skill_point:(sname)->
+    # TODO
+
+  use_battle_point:(at)->
+    if @bp>0 and at in ["str","int","dex"]
+      @bp--
+      @[at] +=1
+      @rebuild()
+      true
+    else
+      null
+
+  on_status_change :->
   get_exp:(point)->
     console.log "get :"+point
     @exp += point
@@ -481,11 +498,13 @@ exports.create_new = (name,race,cls)->
   st.dex += r.dex
 
   status  = new Status st
-  status.race = race
+  status.race = race 
   status.class = cls
   status.gold = 0
   status.exp = 0
   status.lv = 1
+  status.sp = 3
+  status.bp = 3
 
   equipment = new Equipment 
     main_hand : 'dagger'

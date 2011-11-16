@@ -67,7 +67,7 @@ require('zappa') config.port, ->
 
   @get '/': ->
     console.log @session.name
-    # @session.name = "mizchi"  # for debug
+    @session.name = "mizchi"  # for debug
     if @session.name
       @render index:
         id : @session.name
@@ -84,7 +84,11 @@ require('zappa') config.port, ->
   @client '/bootstrap.js': ->
     window.view =
       ObjectInfo : ko.observable []
+      CharInfo : ko.observable null
       CoolTime : ko.observable []
+      use_battle_point: (e)->
+        at = $(e.target).attr('target')
+        soc.emit 'use_battle_point', at:at
 
   save = (char,fn=->)->
     return fn(true,null) unless char?.name
@@ -117,6 +121,9 @@ require('zappa') config.port, ->
           buff.push ~~(100*s.ct/s.CT)
       @io.sockets.socket(id).emit 'update_ct',cooltime:buff
 
+      if game.cnt%(15*120) is 0
+        @io.sockets.socket(id).emit 'update_char',player.toData()
+
   # ==== clinet wewbsocket ====
   @client '/index.js': ->
     window.soc = @connect()
@@ -131,8 +138,10 @@ require('zappa') config.port, ->
       grr.render @data
 
     @on update_ct: ->
-      console.log @data.cooltime
       view.CoolTime @data.cooltime
+
+    @on update_char: ->
+      view.CharInfo @data
 
   # ==== server wewbsocket ====
 
@@ -149,6 +158,7 @@ require('zappa') config.port, ->
   @on keydown: ->
     game.stages.f1.players[@id]?.keys[@data.code] = 1
 
+
   @on keyup: ->
     game.stages.f1.players[@id]?.keys[@data.code] = 0
 
@@ -158,6 +168,10 @@ require('zappa') config.port, ->
     game.stages.f1.players[@id]?.destination =
       x:@data.x
       y:@data.y
+
+  @on use_battle_point: ->
+    game.stages.f1.players[@id]?.status.use_battle_point(@data.at)
+    @emit 'update_char', game.stages.f1.players[@id]?.toData()
 
   @on login: ->
     name = @data.name
@@ -173,6 +187,7 @@ require('zappa') config.port, ->
         Users.save name , savedata,(e)->
           console.log e if e
         game.stages.f1.join(@id,name,savedata)
+      @emit 'update_char', savedata
 
   setInterval ->
     d "inteval save"
