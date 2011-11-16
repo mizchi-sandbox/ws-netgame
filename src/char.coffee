@@ -31,7 +31,6 @@ class Character extends Sprite
     @id = ~~(random() * 1000)
     @cnt = ~~(random() * 60)
     @items = new ItemBox
-
     @animation = []
     @_path = []
 
@@ -54,11 +53,7 @@ class Character extends Sprite
   action:(target)->
     @move()
     for i in seq
-      @skills[i].charge(true) if @skills[i]
-    # for name,skill of @skills
-    #   skill.charge(true) if skill
-      # f = skill is @selected_skill
-      # skill.charge(f) if skill
+      @skills[i].charge(false) if @skills[i]
     @selected_skill.charge(true) #update(target)
     @selected_skill.exec(target) #update(target)
 
@@ -80,12 +75,15 @@ class Character extends Sprite
 
   # recognize
   search : (objs)->
-    enemies = @find_obj(ObjectId.get_enemy(@),objs,@status.sight_range)
+    range = (if @target then @status.trace_range else @status.active_range)
+    enemies = @find_obj(ObjectId.get_enemy(@),objs,range)
     if @target
-      if @target.is_dead() or @get_distance(@target) > @status.sight_range*1.5
+      if @target.is_dead() or @get_distance(@target) > @status.trace_range
         console.log "#{@name} lost track of #{@target.name}"
         @target = null
     else if enemies.length > 0
+      enemies.sort (a,b)->
+        @get_distance(a) - @get_distance(b)
       @target = enemies.first()
       console.log "#{@name} find #{@target.name}"
 
@@ -100,6 +98,11 @@ class Character extends Sprite
     else if @group isnt ObjectId.Player
       return true if @cnt%60 < 15
     return false
+
+  onDamaged : (amount)->
+    console.log "#{@name} is damaged"
+
+  onHealed : (amount)->
 
   update_path : (fp ,tp )->
     [fx ,fy] = fp
@@ -202,6 +205,9 @@ class Character extends Sprite
   add_damage : (actor, amount)->
     before = @is_alive()
     @status.hp -= amount
+    unless @target
+      if @get_distance(actor) < @status.trace_range
+        @target = actor
     @die(actor) if @is_dead() and before
     return @is_alive()
 
@@ -236,9 +242,10 @@ class Goblin extends Character
   constructor: (@scene , @group,lv=1) ->
     @set_pos()
     @race = 'Goblin'
-    @id = ObjectId.Monster
+    # @id = ObjectId.Monster
     @dir = 0
     @status = new Status {lv:1,str: 8, int: 4, dex:6},1
+    @status.trace_range = 32*8
     super(@scene ,@x,@y,@group,@status)
     @skills = new SkillBox @,[
       {
@@ -290,20 +297,26 @@ class Player extends Character
     # @skills.one = new Atack @
     @skills = new SkillBox @,data.skills
     @selected_skill = @skills.one
-    @status.sight_range = 72
+
+    @status.active_range = 72
+    @status.trace_range = 72
 
   select_skill :()->
     for k,v of @keys
-      # if v and k in ["zero","one","two","three","four","five","six","seven","eight","nine"]
-      if v and k in ["one","two","three","four"]
+      if v and k in ["one","two","three","four","five"]
       # if v and k in ["one"]
         return @selected_skill = @skills[k]
 
   update:(objs)->
     cmap = @scene
-    enemies = @find_obj(ObjectId.get_enemy(@),objs,@status.sight_range)
+    enemies = @find_obj(ObjectId.get_enemy(@),objs,@status.active_range)
     if @keys.space is 1
       @shift_target(enemies)
+
+    range = @selected_skill.range
+    @status.active_range = range
+    @status.trace_range = range
+
     super objs,cmap
 
   set_destination:(x,y)->
@@ -353,6 +366,7 @@ class Player extends Character
       else
         @y += move
 
+
 class Equipment
   constructor:(data={})->
     @main_hand = data.main_hand or null
@@ -380,6 +394,7 @@ class Status
     @gold = data.gold or 10 
 
     @sp = data.sp or 0  
+    @sp = data.bp or 0
     @class = data.class or null
     @race = data.race or null
     @str = data.str or 5
@@ -401,13 +416,14 @@ class Status
     @res = params.int / 10
 
     @regenerate = ~~(params.str/10)
-    @sight_range = params.dex*20
+    @active_range = params.dex*20
     @speed = ~~(params.dex * 0.5)
 
   level_up: ()->
     @lv++
     @exp = 0
     @sp++
+    @bp++ if @lv%3 is 0 
     @next_lv = @lv * 50
     @build_status str:@str,int:@int,dex:@dex
 
@@ -421,15 +437,13 @@ class Status
   set_next_exp:()->
     @next_lv = @lv * 30
 
-  onDamaged : (amount)->
-
-  onHealed : (amount)->
   toData : ->
     class: @class
     race : @race
     exp  : @exp
     lv   : @lv
     sp   : @sp 
+    bp   : @bp 
     hp   : @hp
     HP   : @HP
     mp   : @mp
@@ -491,6 +505,7 @@ exports.create_new = (name,race,cls)->
   p.skills.two = new Skill.Smash p,1
   p.skills.three = new Skill.Heal p,1
   p.skills.four = new Skill.Meteor p,1
+  p.skills.five = new Skill.Lightning p,1
   p.selected_skill = p.skills.one
 
   console.log p.toData()

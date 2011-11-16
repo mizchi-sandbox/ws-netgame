@@ -45,11 +45,18 @@ class RandomStage extends Stage
         @objects.splice(i,1)
         break
 
+    for _,p of @players
+      if p.is_dead() and p.cnt > 60
+        console.log 'dead:',p.id,p.name
+        console.log  p.toData()
+        @join p.id,p.name, p.toData()
+
+
   pop_monster: () ->
     if random() < 0.9
       [rx,ry]  = @get_random_point()
       @objects.push( gob = new Goblin(@,ObjectId.Enemy) )
-      gob.set_pos rx,ry
 
+      gob.set_pos rx,ry
 
 exports.RandomStage = RandomStage

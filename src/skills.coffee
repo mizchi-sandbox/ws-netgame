@@ -9,7 +9,7 @@ class Skill
   constructor: (@actor,@lv=1) ->
     @_build(@lv)
     @CT = @BCT * 30
-    @ct = @CT
+    @ct = 0
 
   charge:(is_selected)->
     if @ct < @CT
@@ -19,8 +19,8 @@ class Skill
         @ct += @bg_charge
 
   update: (objs,keys)->
-    for name,skill of @actor.skills
-      skill.charge @, skill is @
+    # for name,skill of @actor.skills
+    #   skill.charge skill is @
     @exec objs
 
   toData : ->
@@ -96,66 +96,80 @@ class TargetAreaHit extends DamageHit
     #   @actor.targeting_obj.add_animation new Anim.prototype[@effect] null, @range*1.5
 
 class Atack extends SingleHit
-  name : "Atack"
-  range : 60
-  BCT : 1
-  auto: true
-  bg_charge : 0.2
-  fg_charge : 1
-  damage_rate : 1.0
-  random_rate : 0.2
+  constructor: () ->
+    super arguments[0],arguments[1]
+    @name = "Atack"
+    @range = 60
+    @BCT = 1
+    @auto =  true
+    @bg_charge = 0
+    @fg_charge = 1
+    @damage_rate = 1.0
+    @random_rate = 0.2
 
-  _build:(lv)->
-    @range -= lv
-    @CT -= lv/40
-    @bg_charge += lv/20
-    @fg_charge -= lv/20
-    @damage_rate += lv/20
+  _calc : (target)->
+    damage = ~~(@actor.status.str * @_calc_rate(target,'slash'))
+    ~~(damage*@damage_rate*@_get_random())
 
-  # exec:(objs)->
-  #   super objs
-  #   console.log @name
+
+class Lightning extends SingleHit
+  constructor: () ->
+    super arguments[0],arguments[1]
+    @name = "Lightning"
+    @range = 150
+    @BCT = 2
+    @auto =  true
+    @bg_charge = 0.1
+    @fg_charge = 1
+    @damage_rate = 1.0
+    @random_rate = 0.2
+
+  _calc : (target)->
+    damage = ~~(@actor.status.int * @_calc_rate(target,'slash'))
+    ~~(damage*@damage_rate*@_get_random())
+
 
 class Smash extends SingleHit
-  name : "Smash"
-  range : 60
-  BCT : 2
-  damage_rate : 2.2
-  random_rate : 0.5
-  bg_charge : 0.5
-  fg_charge : 1
+  constructor: ->
+    super arguments[0],arguments[1]
+    @name = "Smash"
+    @range = 60
+    @BCT = 2
+    @damage_rate = 2.2
+    @random_rate = 0.5
+    @bg_charge = 0.5
+    @fg_charge = 1
 
-  _build: (lv) ->
-    @range -= lv
-    @CT -= lv/10
-    @bg_charge += lv/20
-    @fg_charge -= lv/20
-    @damage_rate += lv/20
+
   _calc : (target)->
     return ~~(@actor.status.atk * target.status.def*@damage_rate*randint(100*(1-@random_rate),100*(1+@random_rate))/100)
 
 class Meteor extends AreaHit
-  name : "Meteor"
-  range : 80
-  auto: true
-  BCT : 4
-  damage_rate : 5
-  random_rate : 0.1
+  constructor: () ->
+    super arguments[0],arguments[1]
+    @name = "Meteor"
+    @range = 80
+    @auto = true
+    @BCT = 4
+    @damage_rate = 5
+    @random_rate = 0.1
 
-  bg_charge : 0.5
-  fg_charge : 1
-  effect : 'Burn'
+    @bg_charge = 0.5
+    @fg_charge = 1
+    @effect = 'Burn'
 
   _calc : (target)->
     return ~~(@actor.status.atk * target.status.def*@damage_rate*randint(100*(1-@random_rate),100*(1+@random_rate))/100)
 
 class Heal extends Skill
-  name : "Heal"
-  range : 0
-  auto: false
-  BCT : 4
-  bg_charge : 0.5
-  fg_charge : 1
+  constructor: () ->
+    super arguments[0],arguments[1]
+    @name = "Heal"
+    @range = 0
+    @auto= false
+    @BCT = 4
+    @bg_charge = 0.5
+    @fg_charge =  1
 
   exec:()->
     target = @actor
@@ -188,4 +202,5 @@ exports.Atack = Atack
 exports.Heal = Heal
 exports.Smash = Smash
 exports.Meteor = Meteor
+exports.Lightning = Lightning
 
