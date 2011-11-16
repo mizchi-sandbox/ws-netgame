@@ -475,10 +475,9 @@ class ItemBox
     @items = data or []
   toData :->
     @items
-# crate_new 'mizchi','human','Load'
 exports.create_new = (name,race,cls)->
   classes =
-    Load: 
+    Lord: 
       str : 10
       int : 10
       dex : 10 

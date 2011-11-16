@@ -182,7 +182,7 @@ require('zappa') config.port, ->
         d savedata
         game.stages.f1.join(@id,name,savedata)
       else
-        savedata = create_new(name,'human','Load')
+        savedata = create_new(name,'human','Lord')
         d "[create] #{@data.name}"
         Users.save name , savedata,(e)->
           console.log e if e
