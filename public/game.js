@@ -343,7 +343,7 @@ GroundSprite = (function() {
     _ref = this.ip, ix = _ref[0], iy = _ref[1];
     size_x = this.scale * this.x;
     size_y = this.scale * this.y;
-    return g.drawImage(this.ground, cx + ix, cy + iy - size_y / 2, size_x, size_y, 0, 0, size_x, size_y);
+    return g.drawImage(this.ground, cx + ix - size_x / 2, cy + iy - size_y / 2, size_x, size_y, 0, 0, size_x, size_y);
   };
   GroundSprite.prototype.draw_upper = function(g, cx, cy) {
     var ix, iy, size_x, size_y, _ref;

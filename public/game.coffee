@@ -258,13 +258,14 @@ class GroundSprite extends CanvasSprite
           # g.fill()
 
 
+# g.drawImage(@ground, cx-320+ix, cy+iy-240, 640, 480, 0 , 0 , 640, 480)
   draw:(g,cx,cy)->
     [ix,iy]= @ip
     size_x = @scale*@x
     size_y = @scale*@y
     g.drawImage(
       @ground, 
-      cx+ix, cy+iy-size_y/2, 
+      cx+ix-size_x/2, cy+iy-size_y/2, 
       size_x, size_y, 
       0 , 0 , size_x, size_y
     )
