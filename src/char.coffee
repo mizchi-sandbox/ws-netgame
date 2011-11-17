@@ -120,6 +120,8 @@ class Character extends Sprite
 
     if @destination
       @update_path( [~~(@x),~~(@y)],[~~(@destination.x),~~(@destination.y)] )
+      console.log @_path
+      @to = @_path.shift()
       @destination = null
 
     unless @to

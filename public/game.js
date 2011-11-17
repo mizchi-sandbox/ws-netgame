@@ -287,10 +287,10 @@ TileSprite = (function() {
 GroundSprite = (function() {
   __extends(GroundSprite, CanvasSprite);
   function GroundSprite(map, scale) {
-    var gr, i_scale, mx, my, _ref;
+    var gr, mx, my, _ref;
     this.map = map;
     this.scale = scale != null ? scale : 32;
-    i_scale = 6;
+    this.i_scale = 18;
     this.ip = [800, 1600];
     _ref = [this.map.length * this.scale, this.map[0].length * this.scale], mx = _ref[0], my = _ref[1];
     gr = document.createElement('canvas');
@@ -306,8 +306,7 @@ GroundSprite = (function() {
     return [(x + y) / 2 + ix, (x - y) / 4 + iy];
   };
   GroundSprite.prototype.shape = function(g, u) {
-    var h, i, j, vx, vy, x, y, _j, _ref, _results;
-    h = this.scale;
+    var i, j, vx, vy, x, y, _j, _ref, _results;
     _results = [];
     for (i = 0, _ref = this.map.length; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
       _results.push((function() {
@@ -315,13 +314,13 @@ GroundSprite = (function() {
         _results2 = [];
         for (_j = 0, _ref2 = this.map[i].length; 0 <= _ref2 ? _j < _ref2 : _j > _ref2; 0 <= _ref2 ? _j++ : _j--) {
           j = this.map[i].length - _j - 1;
-          _ref3 = this.p2ism(i * this.scale, j * this.scale), vx = _ref3[0], vy = _ref3[1];
+          _ref3 = this.p2ism(i * this.i_scale, j * this.i_scale), vx = _ref3[0], vy = _ref3[1];
           _results2.push((function() {
             var _i, _len, _ref4, _ref5;
             if (!this.map[i][j]) {
               g.init(Color.i(192, 192, 192));
               g.moveTo(vx, vy);
-              _ref4 = [[vx + this.scale / 2, vy + this.scale / 4], [vx + this.scale, vy], [vx + this.scale / 2, vy - this.scale / 4]];
+              _ref4 = [[vx + this.i_scale / 2, vy + this.i_scale / 4], [vx + this.i_scale, vy], [vx + this.i_scale / 2, vy - this.i_scale / 4]];
               for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
                 _ref5 = _ref4[_i], x = _ref5[0], y = _ref5[1];
                 g.lineTo(x, y);
@@ -339,11 +338,15 @@ GroundSprite = (function() {
     return _results;
   };
   GroundSprite.prototype.draw = function(context, cx, cy) {
-    var ix, iy, size_x, size_y, _ref;
+    var fx, fy, internal_x, internal_y, ix, iy, size_x, size_y, _ref;
     _ref = this.ip, ix = _ref[0], iy = _ref[1];
     size_x = context.scale * context.x;
     size_y = context.scale * context.y;
-    return context.g.drawImage(this.ground, cx + ix - size_x / 2, cy + iy - size_y / 2, size_x, size_y, 0, 0, size_x, size_y);
+    internal_x = this.i_scale * context.x;
+    internal_y = this.i_scale * context.y;
+    fx = (cx - size_x / 2) * this.i_scale / context.scale;
+    fy = (cy - size_y / 2) * this.i_scale / context.scale;
+    return context.g.drawImage(this.ground, fx + ix, fy + iy, internal_x, internal_y, 0, 0, size_x, size_y);
   };
   return GroundSprite;
 })();
@@ -381,11 +384,14 @@ GameRenderer = (function() {
       });
     };
     this.canvas.onmousedown = __bind(function(e) {
-      var mx, my, _ref;
-      _ref = this.ims2pos(e.offsetX / this.scale, e.offsetY / this.scale), mx = _ref[0], my = _ref[1];
+      var cx, cy, dx, dy, rx, ry, _ref, _ref2, _ref3;
+      _ref = [e.offsetX - this.scale * this.x / 2, e.offsetY - this.scale * this.y / 2], dx = _ref[0], dy = _ref[1];
+      _ref2 = [dx + 2 * dy, dx - 2 * dy], rx = _ref2[0], ry = _ref2[1];
+      _ref3 = this._camn, cx = _ref3[0], cy = _ref3[1];
+      console.log(cx + rx / this.scale, cy + ry / this.scale);
       return soc.emit("click_map", {
-        x: mx,
-        y: my
+        x: ~~(cx + rx / this.scale),
+        y: ~~(cy + ry / this.scale)
       });
     }, this);
   }
@@ -403,8 +409,8 @@ GameRenderer = (function() {
   GameRenderer.prototype.ism2pos = function(x, y) {
     var cx, cy, dx, dy, _ref, _ref2;
     _ref = [x - this.scale * this.x / 2, y - this.scale * this.y / 2], dx = _ref[0], dy = _ref[1];
-    _ref2 = this._camn, cx = _ref2[0], cy = _ref2[1];
-    return [cx + dx + 2 * dy, cy + dx - 2 * dy];
+    _ref2 = this.cam, cx = _ref2[0], cy = _ref2[1];
+    return [dx + 2 * dy, dx - 2 * dy];
   };
   GameRenderer.prototype.render = function(data) {
     var PI, cx, cy, hp, i, id, lv, n, objs, oid, tid, toid, tvx, tvy, tx, ty, vx, vy, x, y, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _results;

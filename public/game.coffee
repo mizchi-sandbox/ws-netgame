@@ -186,7 +186,7 @@ class TileSprite extends CanvasSprite
 
 class GroundSprite extends CanvasSprite
   constructor:(@map , @scale=32)->
-    i_scale = 6
+    @i_scale = 18
     @ip = [800,1600]
     [mx,my] = [@map.length*@scale , @map[0].length*@scale]
     gr = document.createElement('canvas')
@@ -211,17 +211,16 @@ class GroundSprite extends CanvasSprite
     ]
 
   shape: (g,u)->
-    h = @scale
     for i in [0 ... @map.length]
       for _j in [0 ... @map[i].length]
         j = @map[i].length - _j - 1 
-        [vx,vy] = @p2ism i*@scale ,j*@scale
+        [vx,vy] = @p2ism i*@i_scale ,j*@i_scale
 
         unless @map[i][j] # 通路
           g.init Color.i(192,192,192)
           g.moveTo vx,vy
           g.lineTo(x,y) for [x,y] in [
-            [vx+@scale/2,vy+@scale/4],[vx+@scale,vy],[vx+@scale/2,vy-@scale/4]
+            [vx+@i_scale/2,vy+@i_scale/4],[vx+@i_scale,vy],[vx+@i_scale/2,vy-@i_scale/4]
           ]
           g.lineTo vx,vy
           g.fill()
@@ -263,10 +262,17 @@ class GroundSprite extends CanvasSprite
     [ix,iy]= @ip
     size_x = context.scale * context.x
     size_y = context.scale * context.y
+
+    internal_x = @i_scale * context.x
+    internal_y = @i_scale * context.y
+    
+    fx =  (cx-size_x/2) * @i_scale / context.scale  
+    fy =  (cy-size_y/2) * @i_scale / context.scale  
+
     context.g.drawImage(
       @ground, 
-      cx+ix-size_x/2, cy+iy-size_y/2, 
-      size_x, size_y, 
+      fx+ix, fy+iy, 
+      internal_x, internal_y, 
       0 , 0 , size_x, size_y
     )
 
@@ -306,9 +312,15 @@ class GameRenderer
       soc.emit "keyup", code:key
 
     @canvas.onmousedown = (e)=>
-      [mx , my] = @ims2pos(e.offsetX/@scale, e.offsetY/@scale)
-      soc.emit "click_map", x:mx,y:my
+      [dx,dy] = [e.offsetX-@scale*@x/2,e.offsetY-@scale*@y/2]
+      [rx,ry] = [
+        dx+2*dy
+        dx-2*dy
+      ]
 
+      [cx,cy] =  @_camn
+      console.log cx + rx/@scale, cy + ry/@scale
+      soc.emit "click_map", x: ~~(cx+rx/@scale) ,y: ~~(cy + ry/@scale)
 
   create_map:(map)->
     @gr_sp = new GroundSprite map ,@scale
@@ -327,10 +339,10 @@ class GameRenderer
 
   ism2pos : (x,y)->
     [dx,dy] = [x-@scale*@x/2,y-@scale*@y/2]
-    [cx,cy] = @_camn
+    [cx,cy] = @cam
     [
-      cx+dx+2*dy
-      cy+dx-2*dy
+      dx+2*dy
+      dx-2*dy
     ]
 
   render : (data={})->
