@@ -229,31 +229,31 @@ class GroundSprite extends CanvasSprite
           # h = ~~(3+Math.random()*2)*16
           # h = ~~(j/@map[0].length*20)*8
           # 上の壁
-          uy = vy - h
-          u.moveTo vx,uy
-          u.lineTo(x,y) for [x,y] in [
-            [vx+16,uy+8],[vx+32,uy],[vx+16,uy-8]
-          ]
-          u.lineTo vx,uy
-          u.fill()
+          # uy = vy - h
+          # u.moveTo vx,uy
+          # u.lineTo(x,y) for [x,y] in [
+          #   [vx+16,uy+8],[vx+32,uy],[vx+16,uy-8]
+          # ]
+          # u.lineTo vx,uy
+          # u.fill()
 
-          # 左柱
-          g.init Color.i(62,62,62)
-          g.moveTo vx,vy
-          g.lineTo(x,y) for [x,y] in [
-            [vx,vy-h],[vx+16,vy-h],[vx+16,vy+8]
-          ]
-          g.lineTo vx,vy
-          g.fill()
+          # # 左柱
+          # g.init Color.i(62,62,62)
+          # g.moveTo vx,vy
+          # g.lineTo(x,y) for [x,y] in [
+          #   [vx,vy-h],[vx+16,vy-h],[vx+16,vy+8]
+          # ]
+          # g.lineTo vx,vy
+          # g.fill()
 
-          # 右柱
-          g.init Color.i(48,48,48)
-          g.moveTo vx+16,vy+8
-          g.lineTo(x,y) for [x,y] in [
-            [vx+16,vy+8-h],[vx+32,vy-h],[vx+32,vy]
-          ]
-          g.lineTo vx+16,vy+8
-          g.fill()
+          # # 右柱
+          # g.init Color.i(48,48,48)
+          # g.moveTo vx+16,vy+8
+          # g.lineTo(x,y) for [x,y] in [
+          #   [vx+16,vy+8-h],[vx+32,vy-h],[vx+32,vy]
+          # ]
+          # g.lineTo vx+16,vy+8
+          # g.fill()
 
 
   draw:(g,cx,cy)->
@@ -294,7 +294,6 @@ class GameRenderer
       soc.emit "keyup", code:key
 
     @canvas.onmousedown = (e)=>
-      console.log [x,y] = @ism2pos e.offsetX,e.offsetY
       soc.emit "click_map", x:x,y:y
 
   create_map:(map)->
@@ -327,7 +326,7 @@ class GameRenderer
       [x,y,id,oid] = i.o
       if id is @uid
         @_camn = [x,y]
-        @cam = @to_ism_native(x,y)
+        @cam = @to_ism_native(x*@scale,y*@scale)
         break
 
     # 初期化
@@ -339,7 +338,7 @@ class GameRenderer
     for i in objs
       [x,y,id, oid] = i.o
       {n,hp,lv} = i.s
-      [vx,vy] = @to_ism( x/32*@scale,y/32*@scale)
+      [vx,vy] = @to_ism( x*@scale,y*@scale)
       if -64 < vx < 706 and -48 < vy < 528
         if id is @uid 
           @player_sp.draw(@g,vx,vy)
@@ -353,7 +352,7 @@ class GameRenderer
         # drawInfo
         if i.t
           [tx,ty,tid,toid] = i.t
-          [tvx,tvy] = @to_ism( tx/32*@scale,ty/32*@scale)
+          [tvx,tvy] = @to_ism( tx*@scale,ty*@scale)
           # ターゲット線
           @g.beginPath()
           @g.moveTo vx,vy

@@ -10,8 +10,6 @@ Skills = require './skills'
 seq = ['one','two','three','four','five','six','seven','eight','nine','zero']
 
 class Character extends Sprite
-  scale : null
-
   constructor: (@scene , @x=0,@y=0,@group=ObjectId.Enemy ,status={}) ->
     super @x, @y
     @keys = {}
@@ -98,43 +96,43 @@ class Character extends Sprite
 
   update_path : (fp ,tp )->
     [fx ,fy] = fp
-    from = @scene.get_cell(fx ,fy)
+    from = [~~(fx),~~(fy)]
     [tx ,ty] = tp
-    to = @scene.get_cell( tx ,ty)
+    to = [~~(tx),~~(ty)]
 
     @_path = @scene.search_path( from ,to )
     @to = @_path.shift()
 
   wander : ()->
-    [tx,ty] = @scene.get_cell(@x,@y)
+    [tx,ty] = @scene.get_point(@x,@y)
     @to = [tx+randint(-1,1),ty+randint(-1,1)]
 
   step_forward: (to_x , to_y, wide)->
     @set_dir(to_x,to_y)
     [
-      @x + ~~(wide * cos(@dir)),
-      @y + ~~(wide * sin(@dir))
+      @x + wide * cos(@dir)
+      @y + wide * sin(@dir)
     ]
 
   move: ()->
     return if @is_waiting()
 
     if @destination
-      @update_path( [@x,@y],[@destination.x,@destination.y] )
+      @update_path( [~~(@x),~~(@y)],[~~(@destination.x),~~(@destination.y)] )
       @destination = null
 
     unless @to
       # 優先度 destination(人為設定) > target(ターゲット) > follow(リーダー)
       if @target
-        @update_path( [@x,@y],[@target.x,@target.y] )
+        @update_path( [~~(@x),~~(@y)],[~~(@target.x),~~(@target.y)] )
       else if @follow
-        @update_path( [@x,@y],[@follow.x,@follow.y] )
+        @update_path( [~~(@x),~~(@y)],[~~(@follow.x),~~(@follow.y)] )
       else
         @wander()
 
     else
       wide = @status.speed
-      [dx,dy] = @scene.get_point(@to[0],@to[1])
+      [dx,dy] = @to
       [nx,ny] = @step_forward( dx , dy ,wide)
       if dx-wide<nx<dx+wide and dy-wide<ny<dy+wide
         if @_path.length > 0
@@ -230,14 +228,13 @@ class Character extends Sprite
 
 class Goblin extends Character
   name : "Goblin"
-  scale : 1
   constructor: (@scene , @group,lv=1) ->
     @set_pos()
     @race = 'Goblin'
     # @id = ObjectId.Monster
     @dir = 0
-    @status = new Status {lv:1,str: 8, int: 4, dex:6},1
-    @status.trace_range = 32*8
+    @status = new Status {lv:1,str: 8, int: 4, dex:4},1
+    @status.trace_range = 8
     super(@scene ,@x,@y,@group,@status)
     @skills = new SkillBox @,[
       {
@@ -277,7 +274,6 @@ class Goblin extends Character
 
 class Player extends Character
   # Controller Implement
-  scale : 8
   constructor: (@scene, data = {},@group=ObjectId.Player) ->
     @name = data.name
 
@@ -290,8 +286,8 @@ class Player extends Character
     @skills = new SkillBox @,data.skills
     @selected_skill = @skills.one
 
-    @status.active_range = 72
-    @status.trace_range = 72
+    @status.active_range = 4
+    @status.trace_range = 4
 
   select_skill :()->
     for k,v of @keys
@@ -300,7 +296,6 @@ class Player extends Character
         return @selected_skill = @skills[k]
 
   update:(objs)->
-    cmap = @scene
     enemies = @find_obj(ObjectId.get_enemy(@),objs,@status.active_range)
 
     if @keys.space is 1 and @_last_space_ is 0
@@ -311,7 +306,7 @@ class Player extends Character
     @status.active_range = range
     @status.trace_range = range
 
-    super objs,cmap
+    super objs,@scene
 
   set_destination:(x,y)->
     @target = x:x,y:y,is_dead:(->false),status:{get_param:->}
@@ -319,7 +314,6 @@ class Player extends Character
   wander : ->
 
   move: ->
-    cmap = @scene
     keys = @keys
 
     sum = 0
@@ -333,30 +327,30 @@ class Player extends Character
         super()
         return
     else if sum > 1
-      move = ~~(@status.speed * 0.7 )
+      move = @status.speed * 0.7
     else
       move = @status.speed
     @to = null
     @_wait = 0
 
     if keys.right
-      if cmap.collide( @x+move , @y )
-        @x = (~~(@x/cmap.cell)+1)*cmap.cell-1
+      if @scene.collide( @x+move , @y )
+        @x = ~~(@x)+1-0.1
       else
         @x += move
     if keys.left
-      if cmap.collide( @x-move , @y )
-        @x = (~~(@x/cmap.cell))*cmap.cell+1
+      if @scene.collide( @x-move , @y )
+        @x = ~~(@x)+0.1
       else
         @x -= move
     if keys.down
-      if cmap.collide( @x , @y-move )
-        @y = (~~(@y/cmap.cell))*cmap.cell+1
+      if @scene.collide( @x , @y-move )
+        @y = ~~(@y)+0.1
       else
         @y -= move
     if keys.up
-      if cmap.collide( @x , @y+move )
-        @y = (~~(@y/cmap.cell+1))*cmap.cell-1
+      if @scene.collide( @x , @y+move )
+        @y = ~~(@y)+1-0.1
       else
         @y += move
 
@@ -409,8 +403,8 @@ class Status
     @res = @int / 10
 
     @regenerate = ~~(@str/10)
-    @active_range = @dex*20
-    @speed = ~~(@dex * 0.5)
+    @active_range = 4
+    @speed = @dex/40
 
     @next_lv = @lv * 50
 

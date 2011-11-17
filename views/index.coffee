@@ -64,7 +64,7 @@ div class:"container-fluid row",->
         $$ "{{/if}}"
           # dd -> "${sk.data.name}:lv${sk.data.lv}"
 
-    canvas id:"game",style:"float:left;background-color:gray;"
+    canvas id:"game",style:"float:left;background-color:black;"
 
         # $$ "{{if CharInfo()}}"
         # dl ->

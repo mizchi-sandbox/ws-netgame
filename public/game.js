@@ -317,7 +317,7 @@ GroundSprite = (function() {
     return [(x + y) / 2 + ix, (x - y) / 4 + iy];
   };
   GroundSprite.prototype.shape = function(g, u) {
-    var h, i, j, uy, vx, vy, x, y, _j, _ref, _results;
+    var h, i, j, vx, vy, x, y, _j, _ref, _results;
     h = 32;
     _results = [];
     for (i = 0, _ref = this.map.length; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
@@ -328,7 +328,7 @@ GroundSprite = (function() {
           j = this.map[i].length - _j - 1;
           _ref3 = this.p2ism(i * this.size, j * this.size), vx = _ref3[0], vy = _ref3[1];
           _results2.push((function() {
-            var _i, _k, _l, _len, _len2, _len3, _len4, _m, _ref10, _ref11, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+            var _i, _len, _ref4, _ref5;
             if (!this.map[i][j]) {
               g.init(Color.i(192, 192, 192));
               g.moveTo(vx, vy);
@@ -340,34 +340,7 @@ GroundSprite = (function() {
               g.lineTo(vx, vy);
               return g.fill();
             } else {
-              u.init(Color.i(64, 64, 64));
-              uy = vy - h;
-              u.moveTo(vx, uy);
-              _ref6 = [[vx + 16, uy + 8], [vx + 32, uy], [vx + 16, uy - 8]];
-              for (_k = 0, _len2 = _ref6.length; _k < _len2; _k++) {
-                _ref7 = _ref6[_k], x = _ref7[0], y = _ref7[1];
-                u.lineTo(x, y);
-              }
-              u.lineTo(vx, uy);
-              u.fill();
-              g.init(Color.i(62, 62, 62));
-              g.moveTo(vx, vy);
-              _ref8 = [[vx, vy - h], [vx + 16, vy - h], [vx + 16, vy + 8]];
-              for (_l = 0, _len3 = _ref8.length; _l < _len3; _l++) {
-                _ref9 = _ref8[_l], x = _ref9[0], y = _ref9[1];
-                g.lineTo(x, y);
-              }
-              g.lineTo(vx, vy);
-              g.fill();
-              g.init(Color.i(48, 48, 48));
-              g.moveTo(vx + 16, vy + 8);
-              _ref10 = [[vx + 16, vy + 8 - h], [vx + 32, vy - h], [vx + 32, vy]];
-              for (_m = 0, _len4 = _ref10.length; _m < _len4; _m++) {
-                _ref11 = _ref10[_m], x = _ref11[0], y = _ref11[1];
-                g.lineTo(x, y);
-              }
-              g.lineTo(vx + 16, vy + 8);
-              return g.fill();
+              return u.init(Color.i(64, 64, 64));
             }
           }).call(this));
         }
@@ -420,8 +393,6 @@ GameRenderer = (function() {
       });
     };
     this.canvas.onmousedown = __bind(function(e) {
-      var x, y, _ref;
-      console.log((_ref = this.ism2pos(e.offsetX, e.offsetY), x = _ref[0], y = _ref[1], _ref));
       return soc.emit("click_map", {
         x: x,
         y: y
@@ -456,7 +427,7 @@ GameRenderer = (function() {
       _ref = i.o, x = _ref[0], y = _ref[1], id = _ref[2], oid = _ref[3];
       if (id === this.uid) {
         this._camn = [x, y];
-        this.cam = this.to_ism_native(x, y);
+        this.cam = this.to_ism_native(x * this.scale, y * this.scale);
         break;
       }
     }
@@ -469,7 +440,7 @@ GameRenderer = (function() {
       i = objs[_j];
       _ref4 = i.o, x = _ref4[0], y = _ref4[1], id = _ref4[2], oid = _ref4[3];
       _ref5 = i.s, n = _ref5.n, hp = _ref5.hp, lv = _ref5.lv;
-      _ref6 = this.to_ism(x / 32 * this.scale, y / 32 * this.scale), vx = _ref6[0], vy = _ref6[1];
+      _ref6 = this.to_ism(x * this.scale, y * this.scale), vx = _ref6[0], vy = _ref6[1];
       if ((-64 < vx && vx < 706) && (-48 < vy && vy < 528)) {
         if (id === this.uid) {
           this.player_sp.draw(this.g, vx, vy);
@@ -484,7 +455,7 @@ GameRenderer = (function() {
         }
         if (i.t) {
           _ref7 = i.t, tx = _ref7[0], ty = _ref7[1], tid = _ref7[2], toid = _ref7[3];
-          _ref8 = this.to_ism(tx / 32 * this.scale, ty / 32 * this.scale), tvx = _ref8[0], tvy = _ref8[1];
+          _ref8 = this.to_ism(tx * this.scale, ty * this.scale), tvx = _ref8[0], tvy = _ref8[1];
           this.g.beginPath();
           this.g.moveTo(vx, vy);
           this.g.lineTo(tvx, tvy);

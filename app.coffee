@@ -104,14 +104,20 @@ require('zappa') config.port, ->
   # emitter for client
   game.ws = =>
     objs = game.stages.f1.objects.concat (v for k,v of game.stages.f1.players)
+
+    fix = (n)-> ~~(100*n)/100
     ret = objs.map (i)->
-      o:[i.x,i.y,i.id,i.group]
+      o:[
+        fix(i.x)
+        fix(i.y)
+        i.id
+        i.group]
       s:
         n : i.name
         hp :~~(100*i.status.hp/i.status.HP)
         lv: i.status.lv
       t:(unless i.target then null else [
-          i.target.x,i.target.y,i.target.id, i.target.group
+          fix(i.target.x),fix(i.target.y),i.target.id, i.target.group
         ])
       a:[]
 

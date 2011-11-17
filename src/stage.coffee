@@ -73,16 +73,27 @@ class Room
         @map[cx][cy] = 0
       @next.draw_path()
 
-class Stage extends Sprite
-  constructor: (@cell=32) ->
-    super 0, 0, @cell
+class StageLoader 
+  constructor: () ->
+    super 0, 0
     @_map = @blank(30,30) #@load(maps.debug)
 
-  find:(arr,pos)->
-    for i in arr
-      if i.pos[0] == pos[0] and i.pos[1] == pos[1]
-        return i
-    return null
+
+  _rotate90:(map)->
+    res = []
+    for i in [0...map[0].length]
+      res[i] = ( j[i] for j in map)
+    res
+
+  _set_wall:(map)->
+    x = map.length
+    y = map[0].length
+    map[0] = (1 for i in [0...map[0].length])
+    map[map.length-1] = (1 for i in [0...map[0].length])
+    for i in map
+      i[0]=1
+      i[i.length-1]=1
+    map
 
   load : (text)->
     tmap = text.replaceAll(".","0").replaceAll(" ","1").split("\n")
@@ -95,48 +106,46 @@ class Stage extends Sprite
     map = @_set_wall(map)
     return map
 
-  gen_random_map:(x,y)->
-    map = []
-    for i in [0 ... x]
-      map[i] = []
-      for j in [0 ... y]
-        if (i == 0 or i == (x-1) ) or (j == 0 or j == (y-1))
-          map[i][j] = 1
-        else if Math.random() < 0.2
-          map[i][j] = 1
-        else
-          map[i][j] = 0
-    return map
+
+class Stage extends Sprite
+  constructor: () ->
+    super 0, 0
+    @_map = @blank(30,30) #@load(maps.debug)
+
 
   get_point: (x,y)->
-    [
-      ~~((x+1/2) * @cell)
-      ~~((y+1/2) * @cell)
-    ]
-
-  get_cell: (x,y)->
-    x = ~~(x / @cell)
-    y = ~~(y / @cell)
-    return [x,y]
-
-  get_rand_cell_xy : ()->
-    rx = ~~(Math.random()*@_map.length)
-    ry = ~~(Math.random()*@_map[0].length)
-    if @_map[rx][ry]
-      return @get_rand_cell_xy()
-    return [rx,ry]
+    return [~~(x)+1/2,~~(y)+1/2]
 
   get_random_point: ()->
     rx = ~~(Math.random()*@_map.length)
     ry = ~~(Math.random()*@_map[0].length)
     if @_map[rx][ry]
       return @get_random_point()
-    return @get_point(rx,ry)
+    return [rx+1/2,ry+1/2]
 
   collide: (x,y)->
-    x = ~~(x / @cell)
-    y = ~~(y / @cell)
-    return @_map[x][y]
+    return @_map[~~(x)][~~(y)]
+
+
+  blank : (x,y)->
+    map = []
+    for i in [0 ... x]
+      map[i] = []
+      for j in [0 ... y]
+        map[i][j] = 1
+    return map
+
+  create_map : (x,y,depth)->
+    root = new Room(@blank(x,y),depth ,[1,x-1],[1,y-1])
+    root.draw_path()
+    root.map
+
+
+  find:(arr,pos)->
+    for i in arr
+      if i.pos[0] == pos[0] and i.pos[1] == pos[1]
+        return i
+    return null
 
   search_path: (start,goal,depth=50)->
     class Node
@@ -208,34 +217,5 @@ class Stage extends Sprite
             open_list.push(n)
     return []
 
-  _rotate90:(map)->
-    res = []
-    for i in [0...map[0].length]
-      res[i] = ( j[i] for j in map)
-    res
-
-  _set_wall:(map)->
-    x = map.length
-    y = map[0].length
-    map[0] = (1 for i in [0...map[0].length])
-    map[map.length-1] = (1 for i in [0...map[0].length])
-    for i in map
-      i[0]=1
-      i[i.length-1]=1
-    map
-
-  blank : (x,y)->
-    map = []
-    for i in [0 ... x]
-      map[i] = []
-      for j in [0 ... y]
-        map[i][j] = 1
-    return map
-
-  create_map : (x,y,depth)->
-    root = new Room(@blank(x,y),depth ,[1,x-1],[1,y-1])
-    root.draw_path()
-    root.map
-
-
 exports.Stage = Stage
+

@@ -29,7 +29,7 @@ class Skill
   _get_targets:(objs)-> return []
 
 class DamageHit extends Skill
-  range : 30
+  range : 1
   auto: true
   BCT : 1
   bg_charge : 0.2
@@ -118,7 +118,7 @@ class Atack extends SingleHit
     @CT = 1
     super arguments[0],arguments[1]
     @name = "Atack"
-    @range = 60
+    @range = 3
     @auto =  true
     @bg_charge = 0
     @fg_charge = 1
@@ -135,7 +135,7 @@ class Lightning extends ChainHit
     @CT = 2
     super arguments[0],arguments[1]
     @name = "Lightning"
-    @range = 220
+    @range = 12
     @auto =  true
     @bg_charge = 0.1
     @fg_charge = 1
@@ -152,7 +152,7 @@ class Smash extends SingleHit
     @CT = 2
     super arguments[0],arguments[1]
     @name = "Smash"
-    @range = 60
+    @range = 3
     @damage_rate = 2.2
     @random_rate = 0.5
     @bg_charge = 0.5
@@ -167,7 +167,7 @@ class Meteor extends AreaHit
     @CT = 4
     super arguments[0],arguments[1]
     @name = "Meteor"
-    @range = 80
+    @range = 8
     @auto = true
     @damage_rate = 5
     @random_rate = 0.1
@@ -198,7 +198,7 @@ class Heal extends Skill
 
 class ThrowBomb extends Skill
   name : "Throw Bomb"
-  range : 120
+  range : 12
   auto: true
   BCT : 4
   bg_charge : 0.5

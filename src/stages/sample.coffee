@@ -6,8 +6,8 @@ require './../Util'
 {Stage} = require "./../stage"
 
 class RandomStage extends Stage
-  constructor: (@context , @cell=32) ->
-    super @cell
+  constructor: (@context) ->
+    super()
     @_map = @create_map 60,60,15
     @max_object_count = 10
     @cnt = 0
@@ -41,7 +41,7 @@ class RandomStage extends Stage
       i.update(objs,@)
     @sweep()
     if @objects.length < @max_object_count and @cnt % 10 is 0
-      @pop_monster()
+     @pop_monster()
     @cnt++
 
   sweep: ()->
