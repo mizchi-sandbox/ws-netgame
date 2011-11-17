@@ -65,8 +65,10 @@ div class:"container-fluid row",->
         $$ "{{/if}}"
           # dd -> "${sk.data.name}:lv${sk.data.lv}"
 
-    button 'onclick':'grr.scale +=1 ',value:'scale++','scale++'
     canvas id:"game",style:"float:left;background-color:black;"
+
+    button class:'btn',onclick:"grr.change_scale(grr.scale+1);",'sclae++'
+    button class:'btn',onclick:'grr.change_scale(grr.scale-1);','scale--'
 
         # $$ "{{if CharInfo()}}"
         # dl ->

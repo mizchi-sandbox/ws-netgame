@@ -81,15 +81,6 @@ class Character extends Sprite
     @selected_skill = new Skill.Atack(@)
 
   # action
-  is_waiting : ()->
-    if @target
-      @set_dir(@target.x,@target.y)
-      return true if @get_distance(@target) < @selected_skill.range
-    else if @group isnt ObjectId.Player
-      return true if @cnt%60 < 15
-    return false
-
-  onDamaged : (amount)->
     console.log "#{@name} is damaged"
 
   onHealed : (amount)->
@@ -115,15 +106,30 @@ class Character extends Sprite
       @y + wide * sin(@dir)
     ]
 
+  onDamaged : (amount)->
+
+  is_waiting : ()->
+    if @target
+      @set_dir(@target.x,@target.y)
+      return true if @get_distance(@target) < @selected_skill.range
+    else if @group isnt ObjectId.Player
+      return true if @cnt%60 < 15
+    return false
+
   move: ()->
-    return if @is_waiting() and !@_on_destination
+    if @_on_going_destination
+      if @target
+        @set_dir(@target.x,@target.y)
+        return if @get_distance(@target) < @selected_skill.range
+    else
+      return if @is_waiting()
 
     if @destination
       @update_path( [~~(@x),~~(@y)],[~~(@destination.x),~~(@destination.y)] )
       console.log @_path
       @to = @_path.shift()
       @destination = null
-      @_on_destination = true
+      @_on_going_destination = true
 
     unless @to
       # 優先度 destination(人為設定) > target(ターゲット) > follow(リーダー)
@@ -143,7 +149,7 @@ class Character extends Sprite
           @to = @_path.shift()
         else
           @to = null
-          @_on_detination = false
+          @_on_going_detination = false
 
     # 衝突判定
     unless @scene.collide( nx,ny )
@@ -335,6 +341,7 @@ class Player extends Character
       move = @status.speed * 0.7
     else
       move = @status.speed
+    @_on_going_destination = false
     @to = null
     @_wait = 0
 

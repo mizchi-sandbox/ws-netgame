@@ -1,6 +1,6 @@
 {ObjectId} = require './ObjectId'
 {randint} = require './Util'
-{random} = Math
+{random,sin,cos} = Math
 seq = ['one','two','three','four','five','six','seven','eight','nine','zero']
 
 class Skill
@@ -45,6 +45,8 @@ class DamageHit extends Skill
   _get_random:()->
     randint(100*(1-@random_rate),100*(1+@random_rate))/100
 
+  affect :(target)->
+
   exec:(objs)->
     targets = @_get_targets(objs)
     # console.log @actor.name+":"+@name+":"+@ct/@MAX_CT
@@ -52,6 +54,7 @@ class DamageHit extends Skill
       for t in targets
         amount = @_calc t
         t.add_damage(@actor,amount)
+        @affect(t)
         # t.add_animation new Anim.prototype[@effect] amount
       @ct = 0
       return true
@@ -137,7 +140,7 @@ class Lightning extends ChainHit
     @name = "Lightning"
     @range = 12
     @auto =  true
-    @bg_charge = 0.1
+    @bg_charge = 0
     @fg_charge = 1
     @damage_rate = 1.0
     @random_rate = 0.2
@@ -157,6 +160,24 @@ class Smash extends SingleHit
     @random_rate = 0.5
     @bg_charge = 0.5
     @fg_charge = 1
+
+  affect : (target)->
+    rx = target.x - @actor.x
+    ry = target.y - @actor.y
+    if rx >= 0
+      rad = Math.atan( ry / rx  )
+    else
+      rad = Math.PI - Math.atan( ry / - rx  )
+
+    kd = 3
+    nx = target.x + kd*cos(rad)
+    ny = target.y + kd*sin(rad)
+    if !@actor.scene._map[~~(nx)][~~(ny)]
+      console.log 'knockback!'
+      target.x = nx
+      target.y = ny
+
+
 
 
   _calc : (target)->

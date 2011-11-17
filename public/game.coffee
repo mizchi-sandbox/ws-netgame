@@ -217,7 +217,7 @@ class GroundSprite extends CanvasSprite
         [vx,vy] = @p2ism i*@i_scale ,j*@i_scale
 
         unless @map[i][j] # 通路
-          g.init Color.i(192,192,192)
+          g.init Color.i(128,128,128)
           g.moveTo vx,vy
           g.lineTo(x,y) for [x,y] in [
             [vx+@i_scale/2,vy+@i_scale/4],[vx+@i_scale,vy],[vx+@i_scale/2,vy-@i_scale/4]
@@ -327,6 +327,11 @@ class GameRenderer
       console.log cx + rx/@scale, cy + ry/@scale
       soc.emit "click_map", x: ~~(cx+rx/@scale) ,y: ~~(cy + ry/@scale)
 
+  change_scale : (scale)->
+    @scale = scale
+    @canvas.width = @x*@scale
+    @canvas.height = @y*@scale
+
   create_map:(map)->
     @gr_sp = new GroundSprite map ,@scale
 
@@ -384,7 +389,9 @@ class GameRenderer
         if i.t
           [tx,ty,tid,toid] = i.t
           [tvx,tvy] = @to_ism( tx*@scale,ty*@scale)
+
           # ターゲット線
+          @g.globalAlpha = 0.7
           @g.beginPath()
           @g.moveTo vx,vy
           @g.lineTo tvx,tvy
@@ -394,18 +401,19 @@ class GameRenderer
           {PI} = Math
           # @g.init Color.i(0,0,0)
           @g.beginPath()
-          @g.arc(tvx,tvy, ~~(@scale/2) ,-PI/6,PI/6,false)
+          @g.arc(tvx+@scale/8,tvy, ~~(@scale/2) ,-PI/6,PI/6,false)
           @g.stroke()
           @g.beginPath()
-          @g.arc(tvx,tvy, ~~(@scale/2) ,5*PI/6,7*PI/6,false)
+          @g.arc(tvx+@scale/8,tvy, ~~(@scale/2) ,5*PI/6,7*PI/6,false)
           @g.stroke()
           # @g.moveTo tvx-@size/2-3,tvy-@size/2
           # @g.lineTo tvx-@size-3,tvy
           # @g.lineTo tvx-@size/2-3,tvy+@size/2
           @g.stroke()
 
-        @g.init Color.Black
-        @g.fillText ''+~~(hp) , vx-6,vy-12
+        @g.init Color.White
+        @g.initText @scale/10, 'Georgia'
+        @g.fillText ''+~~(hp) , vx-6,vy-@scale/4
         @g.fillText n , vx-10,vy+6
     # @gr_sp?.draw_upper(@g,cx,cy)
 
