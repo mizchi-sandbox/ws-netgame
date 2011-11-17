@@ -216,13 +216,15 @@ require('zappa') config.port, ->
     console.log 'create account', @body
     name = @body.name
     password = @body.password
+    race = @body.race
+    cls = @body.class
 
     Users.get name,(e,doc)=>
       if doc
         @send 'already exist.'
         return
 
-      savedata = create_new(name,'human','Lord')
+      savedata = create_new(name,race,cls)
       savedata.password = password
 
       Users.save @body.name , savedata, (e)=>
@@ -255,19 +257,60 @@ require('zappa') config.port, ->
         div class:"container-fluid",->
           h1 -> "Dir-Net"
           div class:"content",->
-            a href:"/verify",-> "Twitterでログイン"
+            # a href:"/verify",-> "Twitterでログイン"
 
             p -> "キャラクターを作成"
             form action:'/register',method:"POST",->
-              input name:'name'
-              input type:'password', name:'pass'
-              input type:'submit',value:'キャラクターを作成'
+              p ->
+                input name:'name'
+                input type:'password', name:'pass'
+              p ->
+                span "種族" 
+                fieldset ->
+                  input type:"radio",name:"race",value:"human",checked:true,-> "human"
+                  span "human"
+                  br ''
+
+                  input type:"radio",name:"race",value:"elf",-> "elf"
+                  span "elf"
+                  br ''
+
+                  input type:"radio",name:"race",value:"dwarf",->"dwarf"
+                  span "dwarf"
+                  br ''
+              p ->
+                span "クラス" 
+                fieldset ->
+                  input type:"radio",name:"class",value:"Lord",checked:true,->"Lord"
+                  span -> "Lord"
+                
+              p -> input type:'submit',value:'キャラクターを作成'
+              
+            hr "clear"
             
             p -> "ログイン"
             form action:'/login',method:"POST",->
               input name:'name'
               input type:'password', name:'pass'
-
               input type:'submit',value:'ログイン'
+
+          div class:'guide',->
+            p -> '数字キーで技セット'
+            p -> 'スペースでターゲット切り替え'
+            dl ->
+              dt 'Atack'
+              dd '攻撃'
+
+              dt 'Smash'
+              dd 'ノックバック付き強攻撃 '
+
+              dt 'Heal'
+              dd '回復'
+
+              dt 'Meteor'
+              dd 'ターゲット周辺を巻き込む魔法攻撃'
+
+              dt 'Lightning'
+              dd '周辺にチェインする魔法の雷'
 
 

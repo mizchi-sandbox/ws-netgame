@@ -8,6 +8,8 @@ Skill = require('./skills')
 {SkillBox} = require './skills'
 Skills = require './skills'
 seq = ['one','two','three','four','five','six','seven','eight','nine','zero']
+racial_data = require('./racialdata').RacialData
+class_data = require('./classdata').ClassData
 
 class Character extends Sprite
   constructor: (@scene , @x=0,@y=0,@group=ObjectId.Enemy ,status={}) ->
@@ -482,25 +484,19 @@ class ItemBox
   toData :->
     @items
 exports.create_new = (name,race,cls)->
-  classes =
-    Lord: 
-      str : 10
-      int : 10
-      dex : 10 
-
-  races =
-    human :
-      str : 0
-      int : 0
-      dex : 0
   #mock
   p = new Player null ,{}
 
-  st = classes[cls]
-  r = races[race]
+  st = class_data[cls]
+  r = racial_data[race]
+  console.log 'making data`'
+  console.log class_data
+  console.log cls
+
   st.str += r.str
   st.int += r.int
   st.dex += r.dex
+
 
   status  = new Status st
   status.race = race 

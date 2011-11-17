@@ -17,6 +17,7 @@ div class:"container-fluid row",->
     jqtpl 'UserInfo', ->
       $$ "{{if CharInfo()}}"
       h4 -> "${CharInfo().name}"
+      a href : '/logout',-> "Logout"
       p -> "${CharInfo().status.class} lv.${CharInfo().status.lv} [${CharInfo().status.race}]"
       p -> "bp:${CharInfo().status.bp} sp:${CharInfo().status.sp}"
 
@@ -70,25 +71,6 @@ div class:"container-fluid row",->
     p "画面サイズ"
     button class:'btn',onclick:"grr.change_scale(grr.scale+1);",'sclae++'
     button class:'btn',onclick:'grr.change_scale(grr.scale-1);','scale--'
-    div class:'guide',->
-      p -> '数字キーで技セット'
-      p -> 'スペースでターゲット切り替え'
-      dl ->
-        dt 'Atack'
-        dd '攻撃'
-
-        dt 'Smash'
-        dd 'ノックバック付き強攻撃 '
-
-        dt 'Heal'
-        dd '回復'
-
-        dt 'Meteor'
-        dd 'ターゲット周辺を巻き込む魔法攻撃'
-
-        dt 'Lightning'
-        dd '周辺にチェインする魔法の雷'
-
         # $$ "{{if CharInfo()}}"
         # dl ->
         #   $$ "{{each(i,sk) CharInfo().skills}}"
