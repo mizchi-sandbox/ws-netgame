@@ -171,18 +171,18 @@ class MonsterSprite extends CanvasSprite
     g.lineTo cx,cy
     g.fill()
 
-# class TileSprite extends CanvasSprite
-#   shape: (g)->
-#     g.init(Color.Black)
-#     g.moveTo 0,16
-#     g.lineTo(x,y) for [x,y] in [
-#       [16,24] , [32,16], [16,8]
-#     ]
-#     g.lineTo 0,16
-#     g.fill()
+class TileSprite extends CanvasSprite
+  shape: (g)->
+    g.init(Color.Black)
+    g.moveTo 0,16
+    g.lineTo(x,y) for [x,y] in [
+      [16,24] , [32,16], [16,8]
+    ]
+    g.lineTo 0,16
+    g.fill()
 
-#   draw:(g,x,y)->
-#     g.drawImage(@img, x,y)
+  draw:(g,x,y)->
+    g.drawImage(@img, x,y)
 
 class GroundSprite extends CanvasSprite
   constructor:(@map , @scale=32)->
@@ -192,16 +192,16 @@ class GroundSprite extends CanvasSprite
     gr.width  = @scale*100
     gr.height = @scale*100
 
-    up = document.createElement('canvas')
-    up.width = @scale*100
-    up.height = @scale*100
+    # up = document.createElement('canvas')
+    # up.width = @scale*100
+    # up.height = @scale*100
 
     @shape gr.getContext('2d'),up.getContext('2d')
     @ground = new Image
     @ground.src = gr.toDataURL()
 
-    @upper = new Image
-    @upper.src = up.toDataURL()
+    # @upper = new Image
+    # @upper.src = up.toDataURL()
 
   p2ism : (x,y)->
     [ix,iy]= @ip
@@ -210,7 +210,7 @@ class GroundSprite extends CanvasSprite
     ]
 
   shape: (g,u)->
-    h = 32
+    h = @scale
     for i in [0 ... @map.length]
       for _j in [0 ... @map[i].length]
         j = @map[i].length - _j - 1 
@@ -224,8 +224,9 @@ class GroundSprite extends CanvasSprite
           ]
           g.lineTo vx,vy
           g.fill()
+          console.log 'fill',vx,vy
         else # 壁
-          u.init Color.i(64,64,64)
+          # u.init Color.i(64,64,64)
           # 動的なハイト生成パターン
           # h = ~~(3+Math.random()*2)*16
           # h = ~~(j/@map[0].length*20)*8
@@ -261,11 +262,18 @@ class GroundSprite extends CanvasSprite
     [ix,iy]= @ip
     size_x = @scale*@x
     size_y = @scale*@y
-    g.drawImage(@ground, cx-size_x/2+ix, cy+iy-size_y/2, size_x, size_y, 0 , 0 , size_x, size_y)
+    g.drawImage(
+      @ground, 
+      cx+ix, cy+iy-size_y/2, 
+      size_x, size_y, 
+      0 , 0 , size_x, size_y
+    )
 
-  # draw_upper:(g,cx,cy)->
-  #   [ix,iy]= @ip
-  #   g.drawImage(@upper, cx-ix, cy+iy-240, 640, 480, 0 , 0 , 640, 480)
+  draw_upper:(g,cx,cy)->
+    [ix,iy]= @ip
+    size_x = @scale*@x
+    size_y = @scale*@y
+    # g.drawImage(@upper, cx-ix, cy+iy-240, 640, 480, 0 , 0 , 640, 480)
 
 
 class GameRenderer
@@ -380,5 +388,5 @@ class GameRenderer
         @g.init Color.Black
         @g.fillText ''+~~(hp) , vx-6,vy-12
         @g.fillText n , vx-10,vy+6
-    # @gr_sp?.draw_upper(@g,cx,cy)
+    @gr_sp?.draw_upper(@g,cx,cy)
 
