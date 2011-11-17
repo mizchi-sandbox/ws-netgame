@@ -186,6 +186,7 @@ class TileSprite extends CanvasSprite
 
 class GroundSprite extends CanvasSprite
   constructor:(@map , @scale=32)->
+    i_scale = 6
     @ip = [800,1600]
     [mx,my] = [@map.length*@scale , @map[0].length*@scale]
     gr = document.createElement('canvas')
@@ -196,7 +197,7 @@ class GroundSprite extends CanvasSprite
     # up.width = @scale*100
     # up.height = @scale*100
 
-    @shape gr.getContext('2d'),up.getContext('2d')
+    @shape gr.getContext('2d') #,up.getContext('2d')
     @ground = new Image
     @ground.src = gr.toDataURL()
 
@@ -220,11 +221,10 @@ class GroundSprite extends CanvasSprite
           g.init Color.i(192,192,192)
           g.moveTo vx,vy
           g.lineTo(x,y) for [x,y] in [
-            [vx+@scale/2,vy+@scale/4],[vx+@scale,vy],[vx+@scale/2,vy-@scale/8]
+            [vx+@scale/2,vy+@scale/4],[vx+@scale,vy],[vx+@scale/2,vy-@scale/4]
           ]
           g.lineTo vx,vy
           g.fill()
-          console.log 'fill',vx,vy
         else # 壁
           # u.init Color.i(64,64,64)
           # 動的なハイト生成パターン
@@ -259,21 +259,21 @@ class GroundSprite extends CanvasSprite
 
 
 # g.drawImage(@ground, cx-320+ix, cy+iy-240, 640, 480, 0 , 0 , 640, 480)
-  draw:(g,cx,cy)->
+  draw:(context,cx,cy)->
     [ix,iy]= @ip
-    size_x = @scale*@x
-    size_y = @scale*@y
-    g.drawImage(
+    size_x = context.scale * context.x
+    size_y = context.scale * context.y
+    context.g.drawImage(
       @ground, 
       cx+ix-size_x/2, cy+iy-size_y/2, 
       size_x, size_y, 
       0 , 0 , size_x, size_y
     )
 
-  draw_upper:(g,cx,cy)->
-    [ix,iy]= @ip
-    size_x = @scale*@x
-    size_y = @scale*@y
+  # draw_upper:(g,cx,cy)->
+  #   [ix,iy]= @ip
+  #   size_x = @scale*@x
+  #   size_y = @scale*@y
     # g.drawImage(@upper, cx-ix, cy+iy-240, 640, 480, 0 , 0 , 640, 480)
 
 
@@ -306,8 +306,9 @@ class GameRenderer
       soc.emit "keyup", code:key
 
     @canvas.onmousedown = (e)=>
-      console.log e
-      soc.emit "click_map", x:e.offsetX,y:e.offsetY
+      [mx , my] = @ims2pos(e.offsetX/@scale, e.offsetY/@scale)
+      soc.emit "click_map", x:mx,y:my
+
 
   create_map:(map)->
     @gr_sp = new GroundSprite map ,@scale
@@ -347,7 +348,7 @@ class GameRenderer
 
     [cx,cy] = @cam
 
-    @gr_sp?.draw(@g,cx,cy)
+    @gr_sp?.draw(@,cx,cy)
     for i in objs
       [x,y,id, oid] = i.o
       {n,hp,lv} = i.s
@@ -389,5 +390,5 @@ class GameRenderer
         @g.init Color.Black
         @g.fillText ''+~~(hp) , vx-6,vy-12
         @g.fillText n , vx-10,vy+6
-    @gr_sp?.draw_upper(@g,cx,cy)
+    # @gr_sp?.draw_upper(@g,cx,cy)
 

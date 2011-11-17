@@ -287,15 +287,16 @@ TileSprite = (function() {
 GroundSprite = (function() {
   __extends(GroundSprite, CanvasSprite);
   function GroundSprite(map, scale) {
-    var gr, mx, my, _ref;
+    var gr, i_scale, mx, my, _ref;
     this.map = map;
     this.scale = scale != null ? scale : 32;
+    i_scale = 6;
     this.ip = [800, 1600];
     _ref = [this.map.length * this.scale, this.map[0].length * this.scale], mx = _ref[0], my = _ref[1];
     gr = document.createElement('canvas');
     gr.width = this.scale * 100;
     gr.height = this.scale * 100;
-    this.shape(gr.getContext('2d'), up.getContext('2d'));
+    this.shape(gr.getContext('2d'));
     this.ground = new Image;
     this.ground.src = gr.toDataURL();
   }
@@ -320,14 +321,13 @@ GroundSprite = (function() {
             if (!this.map[i][j]) {
               g.init(Color.i(192, 192, 192));
               g.moveTo(vx, vy);
-              _ref4 = [[vx + this.scale / 2, vy + this.scale / 4], [vx + this.scale, vy], [vx + this.scale / 2, vy - this.scale / 8]];
+              _ref4 = [[vx + this.scale / 2, vy + this.scale / 4], [vx + this.scale, vy], [vx + this.scale / 2, vy - this.scale / 4]];
               for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
                 _ref5 = _ref4[_i], x = _ref5[0], y = _ref5[1];
                 g.lineTo(x, y);
               }
               g.lineTo(vx, vy);
-              g.fill();
-              return console.log('fill', vx, vy);
+              return g.fill();
             } else {
 
             }
@@ -338,18 +338,12 @@ GroundSprite = (function() {
     }
     return _results;
   };
-  GroundSprite.prototype.draw = function(g, cx, cy) {
+  GroundSprite.prototype.draw = function(context, cx, cy) {
     var ix, iy, size_x, size_y, _ref;
     _ref = this.ip, ix = _ref[0], iy = _ref[1];
-    size_x = this.scale * this.x;
-    size_y = this.scale * this.y;
-    return g.drawImage(this.ground, cx + ix - size_x / 2, cy + iy - size_y / 2, size_x, size_y, 0, 0, size_x, size_y);
-  };
-  GroundSprite.prototype.draw_upper = function(g, cx, cy) {
-    var ix, iy, size_x, size_y, _ref;
-    _ref = this.ip, ix = _ref[0], iy = _ref[1];
-    size_x = this.scale * this.x;
-    return size_y = this.scale * this.y;
+    size_x = context.scale * context.x;
+    size_y = context.scale * context.y;
+    return context.g.drawImage(this.ground, cx + ix - size_x / 2, cy + iy - size_y / 2, size_x, size_y, 0, 0, size_x, size_y);
   };
   return GroundSprite;
 })();
@@ -387,10 +381,11 @@ GameRenderer = (function() {
       });
     };
     this.canvas.onmousedown = __bind(function(e) {
-      console.log(e);
+      var mx, my, _ref;
+      _ref = this.ims2pos(e.offsetX / this.scale, e.offsetY / this.scale), mx = _ref[0], my = _ref[1];
       return soc.emit("click_map", {
-        x: e.offsetX,
-        y: e.offsetY
+        x: mx,
+        y: my
       });
     }, this);
   }
@@ -412,7 +407,7 @@ GameRenderer = (function() {
     return [cx + dx + 2 * dy, cy + dx - 2 * dy];
   };
   GameRenderer.prototype.render = function(data) {
-    var PI, cx, cy, hp, i, id, lv, n, objs, oid, tid, toid, tvx, tvy, tx, ty, vx, vy, x, y, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+    var PI, cx, cy, hp, i, id, lv, n, objs, oid, tid, toid, tvx, tvy, tx, ty, vx, vy, x, y, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _results;
     if (data == null) {
       data = {};
     }
@@ -429,47 +424,17 @@ GameRenderer = (function() {
     this.g.clearRect(0, 0, 640, 480);
     _ref2 = this.cam, cx = _ref2[0], cy = _ref2[1];
     if ((_ref3 = this.gr_sp) != null) {
-      _ref3.draw(this.g, cx, cy);
+      _ref3.draw(this, cx, cy);
     }
+    _results = [];
     for (_j = 0, _len2 = objs.length; _j < _len2; _j++) {
       i = objs[_j];
       _ref4 = i.o, x = _ref4[0], y = _ref4[1], id = _ref4[2], oid = _ref4[3];
       _ref5 = i.s, n = _ref5.n, hp = _ref5.hp, lv = _ref5.lv;
       _ref6 = this.to_ism(x * this.scale, y * this.scale), vx = _ref6[0], vy = _ref6[1];
-      if ((-64 < vx && vx < 706) && (-48 < vy && vy < 528)) {
-        if (id === this.uid) {
-          this.player_sp.draw(this.g, vx, vy);
-          this.g.init(Color.Blue);
-        }
-        if (id > 1000) {
-          this.char_sp.draw(this.g, vx, vy);
-          this.g.init(Color.Green);
-        } else {
-          this.monster_sp.draw(this.g, vx, vy);
-          this.g.init(Color.Red);
-        }
-        if (i.t) {
-          _ref7 = i.t, tx = _ref7[0], ty = _ref7[1], tid = _ref7[2], toid = _ref7[3];
-          _ref8 = this.to_ism(tx * this.scale, ty * this.scale), tvx = _ref8[0], tvy = _ref8[1];
-          this.g.beginPath();
-          this.g.moveTo(vx, vy);
-          this.g.lineTo(tvx, tvy);
-          this.g.stroke();
-          PI = Math.PI;
-          this.g.beginPath();
-          this.g.arc(tvx, tvy, ~~(this.scale / 2), -PI / 6, PI / 6, false);
-          this.g.stroke();
-          this.g.beginPath();
-          this.g.arc(tvx, tvy, ~~(this.scale / 2), 5 * PI / 6, 7 * PI / 6, false);
-          this.g.stroke();
-          this.g.stroke();
-        }
-        this.g.init(Color.Black);
-        this.g.fillText('' + ~~hp, vx - 6, vy - 12);
-        this.g.fillText(n, vx - 10, vy + 6);
-      }
+      _results.push((-64 < vx && vx < 706) && (-48 < vy && vy < 528) ? (id === this.uid ? (this.player_sp.draw(this.g, vx, vy), this.g.init(Color.Blue)) : void 0, id > 1000 ? (this.char_sp.draw(this.g, vx, vy), this.g.init(Color.Green)) : (this.monster_sp.draw(this.g, vx, vy), this.g.init(Color.Red)), i.t ? ((_ref7 = i.t, tx = _ref7[0], ty = _ref7[1], tid = _ref7[2], toid = _ref7[3], _ref7), (_ref8 = this.to_ism(tx * this.scale, ty * this.scale), tvx = _ref8[0], tvy = _ref8[1], _ref8), this.g.beginPath(), this.g.moveTo(vx, vy), this.g.lineTo(tvx, tvy), this.g.stroke(), (PI = Math.PI, Math), this.g.beginPath(), this.g.arc(tvx, tvy, ~~(this.scale / 2), -PI / 6, PI / 6, false), this.g.stroke(), this.g.beginPath(), this.g.arc(tvx, tvy, ~~(this.scale / 2), 5 * PI / 6, 7 * PI / 6, false), this.g.stroke(), this.g.stroke()) : void 0, this.g.init(Color.Black), this.g.fillText('' + ~~hp, vx - 6, vy - 12), this.g.fillText(n, vx - 10, vy + 6)) : void 0);
     }
-    return (_ref9 = this.gr_sp) != null ? _ref9.draw_upper(this.g, cx, cy) : void 0;
+    return _results;
   };
   return GameRenderer;
 })();

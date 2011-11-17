@@ -101,6 +101,7 @@ class Character extends Sprite
     to = [~~(tx),~~(ty)]
 
     @_path = @scene.search_path( from ,to )
+    @_path = @_path.map (i)=> @scene.get_point i[0],i[1]
     @to = @_path.shift()
 
   wander : ()->
@@ -234,7 +235,7 @@ class Goblin extends Character
     # @id = ObjectId.Monster
     @dir = 0
     @status = new Status {lv:1,str: 8, int: 4, dex:4},1
-    @status.trace_range = 8
+    @status.trace_range = 13
     super(@scene ,@x,@y,@group,@status)
     @skills = new SkillBox @,[
       {
