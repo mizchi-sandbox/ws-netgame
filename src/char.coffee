@@ -232,6 +232,7 @@ class Character extends Sprite
   toData :()->
     obj = 
       name  : @name
+      password  : @password
       skills: @skills.toData()
       status: @status.toData()
       equipment : @equipment.toData() 
@@ -287,6 +288,7 @@ class Player extends Character
   # Controller Implement
   constructor: (@scene, data = {},@group=ObjectId.Player) ->
     @name = data.name
+    @password = data.password
 
     @set_pos()
     super(@scene,@x,@y,@group)

@@ -187,10 +187,11 @@ class TileSprite extends CanvasSprite
 class GroundSprite extends CanvasSprite
   constructor:(@map , @scale=32)->
     @i_scale = 18
-    @ip = [0,2000]
+    @ip = [500,2000]
+    [x,y] = [@map.length , @map[0].length]
     gr = document.createElement('canvas')
-    gr.width  = @scale*100
-    gr.height = @scale*100 + @ip[1]
+    gr.width  = @scale*x*2+@ip[0]
+    gr.height = @scale*y+@ip[1]
     @gr = gr
 
     # up = document.createElement('canvas')

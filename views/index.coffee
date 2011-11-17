@@ -67,8 +67,27 @@ div class:"container-fluid row",->
 
     canvas id:"game",style:"float:left;background-color:black;"
 
+    p "画面サイズ"
     button class:'btn',onclick:"grr.change_scale(grr.scale+1);",'sclae++'
     button class:'btn',onclick:'grr.change_scale(grr.scale-1);','scale--'
+    div class:'guide',->
+      p -> '数字キーで技セット'
+      p -> 'スペースでターゲット切り替え'
+      dl ->
+        dt 'Atack'
+        dd '攻撃'
+
+        dt 'Smash'
+        dd 'ノックバック付き強攻撃 '
+
+        dt 'Heal'
+        dd '回復'
+
+        dt 'Meteor'
+        dd 'ターゲット周辺を巻き込む魔法攻撃'
+
+        dt 'Lightning'
+        dd '周辺にチェインする魔法の雷'
 
         # $$ "{{if CharInfo()}}"
         # dl ->
@@ -84,7 +103,7 @@ coffeescript ->
   canvas =  document.getElementById "game"
   x = 20
   y = 15
-  cell = 24
+  cell = 28
   canvas.width = x * cell
   canvas.height = y * cell
   $ =>

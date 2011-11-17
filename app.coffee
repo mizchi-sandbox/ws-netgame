@@ -69,7 +69,7 @@ require('zappa') config.port, ->
 
   @get '/': ->
     console.log @session.name
-    @session.name = "mizchi"  # for debug
+    # @session.name = "mizchi"  # for debug
     if @session.name
       @render index:
         id : @session.name
@@ -212,17 +212,62 @@ require('zappa') config.port, ->
   ,1000*60*15
 
 
+  @post '/register': ->
+    console.log 'create account', @body
+    name = @body.name
+    password = @body.password
+
+    Users.get name,(e,doc)=>
+      if doc
+        @send 'already exist.'
+        return
+
+      savedata = create_new(name,'human','Lord')
+      savedata.password = password
+
+      Users.save @body.name , savedata, (e)=>
+        @session.name = name
+        console.log 'create new character'
+        @redirect '/'
+
+  @post '/login': ->
+    console.log @body
+    name = @body.name
+    password = @body.password
+
+    Users.get name,(e,doc)=>
+      console.log e if e
+      if password is doc.password
+        @session.name = doc.name
+        @redirect '/'
+      else 
+        @send 'no such a user'
+
   @view login:->
     doctype 5
     html ->
       head lang:'ja',->
-        title 'Dia-Net'
+        title 'Dir-Net'
         (link rel:"stylesheet",type:"text/css",href:i) for i in [
           "/bootstrap.min.css"
         ]
       body ->
         div class:"container-fluid",->
-          h1 -> "Dia-Net"
+          h1 -> "Dir-Net"
           div class:"content",->
             a href:"/verify",-> "Twitterでログイン"
+
+            p -> "キャラクターを作成"
+            form action:'/register',method:"POST",->
+              input name:'name'
+              input type:'password', name:'pass'
+              input type:'submit',value:'キャラクターを作成'
+            
+            p -> "ログイン"
+            form action:'/login',method:"POST",->
+              input name:'name'
+              input type:'password', name:'pass'
+
+              input type:'submit',value:'ログイン'
+
 

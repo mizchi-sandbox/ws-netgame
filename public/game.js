@@ -287,14 +287,15 @@ TileSprite = (function() {
 GroundSprite = (function() {
   __extends(GroundSprite, CanvasSprite);
   function GroundSprite(map, scale) {
-    var gr;
+    var gr, x, y, _ref;
     this.map = map;
     this.scale = scale != null ? scale : 32;
     this.i_scale = 18;
-    this.ip = [0, 2000];
+    this.ip = [500, 2000];
+    _ref = [this.map.length, this.map[0].length], x = _ref[0], y = _ref[1];
     gr = document.createElement('canvas');
-    gr.width = this.scale * 100;
-    gr.height = this.scale * 100 + this.ip[1];
+    gr.width = this.scale * x * 2 + this.ip[0];
+    gr.height = this.scale * y + this.ip[1];
     this.gr = gr;
     this.shape(gr.getContext('2d'));
     this.ground = new Image;
