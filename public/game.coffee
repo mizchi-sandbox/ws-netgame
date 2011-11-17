@@ -103,8 +103,8 @@ class ImageSprite
   constructor:(src,@size)->
     @img = new Image
     @img.src = src
-  draw:(g)->
-    g.drawImage(@img, x,y)
+  draw:(context)->
+    context.g.drawImage(@img, x,y)
 
 class CanvasSprite
   constructor:(@size=32)->
@@ -119,9 +119,9 @@ class CanvasSprite
      (x-y)/4
     ]
 
-  draw:(g,x,y)->
-    dx = dy = ~~(@size/2)
-    g.drawImage(@img, x-dx,y-dy)
+  draw:(context,x,y)->
+    dx = dy = ~~(context.scale/2)
+    context.g.drawImage(@img, x-dx,y-dy)
 
 class CharSprite extends CanvasSprite
   shape: (g)->
@@ -372,13 +372,13 @@ class GameRenderer
       [vx,vy] = @to_ism( x*@scale,y*@scale)
       if -64 < vx < 706 and -48 < vy < 528
         if id is @uid 
-          @player_sp.draw(@g,vx,vy)
+          @player_sp.draw(@,vx,vy)
           @g.init Color.Blue
         if id > 1000
-          @char_sp.draw(@g,vx,vy)
+          @char_sp.draw(@,vx,vy)
           @g.init Color.Green
         else 
-          @monster_sp.draw(@g,vx,vy)
+          @monster_sp.draw(@,vx,vy)
           @g.init Color.Red
         # drawInfo
         if i.t

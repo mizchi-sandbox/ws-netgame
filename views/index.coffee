@@ -50,6 +50,7 @@ div class:"container-fluid row",->
         $$ "{{/if}}"
         $$ "{{/each}}"
 
+
   div class:"span12",->
     div class:"row" , ->
       jqtpl 'SkillInfo', ->
@@ -64,6 +65,7 @@ div class:"container-fluid row",->
         $$ "{{/if}}"
           # dd -> "${sk.data.name}:lv${sk.data.lv}"
 
+    button 'onclick':'grr.scale +=1 ',value:'scale++','scale++'
     canvas id:"game",style:"float:left;background-color:black;"
 
         # $$ "{{if CharInfo()}}"

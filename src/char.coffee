@@ -116,13 +116,14 @@ class Character extends Sprite
     ]
 
   move: ()->
-    return if @is_waiting()
+    return if @is_waiting() and !@_on_destination
 
     if @destination
       @update_path( [~~(@x),~~(@y)],[~~(@destination.x),~~(@destination.y)] )
       console.log @_path
       @to = @_path.shift()
       @destination = null
+      @_on_destination = true
 
     unless @to
       # 優先度 destination(人為設定) > target(ターゲット) > follow(リーダー)
@@ -142,6 +143,7 @@ class Character extends Sprite
           @to = @_path.shift()
         else
           @to = null
+          @_on_detination = false
 
     # 衝突判定
     unless @scene.collide( nx,ny )

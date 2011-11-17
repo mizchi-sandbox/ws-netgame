@@ -168,8 +168,8 @@ ImageSprite = (function() {
     this.img = new Image;
     this.img.src = src;
   }
-  ImageSprite.prototype.draw = function(g) {
-    return g.drawImage(this.img, x, y);
+  ImageSprite.prototype.draw = function(context) {
+    return context.g.drawImage(this.img, x, y);
   };
   return ImageSprite;
 })();
@@ -186,10 +186,10 @@ CanvasSprite = (function() {
   CanvasSprite.prototype.p2ism = function(x, y) {
     return [(x + y) / 2, (x - y) / 4];
   };
-  CanvasSprite.prototype.draw = function(g, x, y) {
+  CanvasSprite.prototype.draw = function(context, x, y) {
     var dx, dy;
-    dx = dy = ~~(this.size / 2);
-    return g.drawImage(this.img, x - dx, y - dy);
+    dx = dy = ~~(context.scale / 2);
+    return context.g.drawImage(this.img, x - dx, y - dy);
   };
   return CanvasSprite;
 })();
@@ -444,7 +444,7 @@ GameRenderer = (function() {
       _ref4 = i.o, x = _ref4[0], y = _ref4[1], id = _ref4[2], oid = _ref4[3];
       _ref5 = i.s, n = _ref5.n, hp = _ref5.hp, lv = _ref5.lv;
       _ref6 = this.to_ism(x * this.scale, y * this.scale), vx = _ref6[0], vy = _ref6[1];
-      _results.push((-64 < vx && vx < 706) && (-48 < vy && vy < 528) ? (id === this.uid ? (this.player_sp.draw(this.g, vx, vy), this.g.init(Color.Blue)) : void 0, id > 1000 ? (this.char_sp.draw(this.g, vx, vy), this.g.init(Color.Green)) : (this.monster_sp.draw(this.g, vx, vy), this.g.init(Color.Red)), i.t ? ((_ref7 = i.t, tx = _ref7[0], ty = _ref7[1], tid = _ref7[2], toid = _ref7[3], _ref7), (_ref8 = this.to_ism(tx * this.scale, ty * this.scale), tvx = _ref8[0], tvy = _ref8[1], _ref8), this.g.beginPath(), this.g.moveTo(vx, vy), this.g.lineTo(tvx, tvy), this.g.stroke(), (PI = Math.PI, Math), this.g.beginPath(), this.g.arc(tvx, tvy, ~~(this.scale / 2), -PI / 6, PI / 6, false), this.g.stroke(), this.g.beginPath(), this.g.arc(tvx, tvy, ~~(this.scale / 2), 5 * PI / 6, 7 * PI / 6, false), this.g.stroke(), this.g.stroke()) : void 0, this.g.init(Color.Black), this.g.fillText('' + ~~hp, vx - 6, vy - 12), this.g.fillText(n, vx - 10, vy + 6)) : void 0);
+      _results.push((-64 < vx && vx < 706) && (-48 < vy && vy < 528) ? (id === this.uid ? (this.player_sp.draw(this, vx, vy), this.g.init(Color.Blue)) : void 0, id > 1000 ? (this.char_sp.draw(this, vx, vy), this.g.init(Color.Green)) : (this.monster_sp.draw(this, vx, vy), this.g.init(Color.Red)), i.t ? ((_ref7 = i.t, tx = _ref7[0], ty = _ref7[1], tid = _ref7[2], toid = _ref7[3], _ref7), (_ref8 = this.to_ism(tx * this.scale, ty * this.scale), tvx = _ref8[0], tvy = _ref8[1], _ref8), this.g.beginPath(), this.g.moveTo(vx, vy), this.g.lineTo(tvx, tvy), this.g.stroke(), (PI = Math.PI, Math), this.g.beginPath(), this.g.arc(tvx, tvy, ~~(this.scale / 2), -PI / 6, PI / 6, false), this.g.stroke(), this.g.beginPath(), this.g.arc(tvx, tvy, ~~(this.scale / 2), 5 * PI / 6, 7 * PI / 6, false), this.g.stroke(), this.g.stroke()) : void 0, this.g.init(Color.Black), this.g.fillText('' + ~~hp, vx - 6, vy - 12), this.g.fillText(n, vx - 10, vy + 6)) : void 0);
     }
     return _results;
   };
