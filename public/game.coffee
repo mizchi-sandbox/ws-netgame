@@ -90,10 +90,10 @@ class Sprite
     yd = Math.pow (@y-target.y) ,2
     return Math.sqrt xd+yd
 
-  get_relative:(cam)->
-    pos =
-      vx : 320 + @x - cam.x
-      vy : 240 + @y - cam.y
+  # get_relative:(cam)->
+  #   pos =
+  #     vx : 320 + @x - cam.x
+  #     vy : 240 + @y - cam.y
 
   find_obj:(group_id,targets, range)->
     targets.filter (t)=>
@@ -171,30 +171,30 @@ class MonsterSprite extends CanvasSprite
     g.lineTo cx,cy
     g.fill()
 
-class TileSprite extends CanvasSprite
-  shape: (g)->
-    g.init(Color.Black)
-    g.moveTo 0,16
-    g.lineTo(x,y) for [x,y] in [
-      [16,24] , [32,16], [16,8]
-    ]
-    g.lineTo 0,16
-    g.fill()
+# class TileSprite extends CanvasSprite
+#   shape: (g)->
+#     g.init(Color.Black)
+#     g.moveTo 0,16
+#     g.lineTo(x,y) for [x,y] in [
+#       [16,24] , [32,16], [16,8]
+#     ]
+#     g.lineTo 0,16
+#     g.fill()
 
-  draw:(g,x,y)->
-    g.drawImage(@img, x,y)
+#   draw:(g,x,y)->
+#     g.drawImage(@img, x,y)
 
 class GroundSprite extends CanvasSprite
-  constructor:(@map , @size=32)->
+  constructor:(@map , @scale=32)->
     @ip = [800,1600]
-    [mx,my] = [@map.length*@size , @map[0].length*@size]
+    [mx,my] = [@map.length*@scale , @map[0].length*@scale]
     gr = document.createElement('canvas')
-    gr.width = 32*100
-    gr.height = 32*100
+    gr.width  = @scale*100
+    gr.height = @scale*100
 
     up = document.createElement('canvas')
-    up.width = 32*100
-    up.height = 32*100
+    up.width = @scale*100
+    up.height = @scale*100
 
     @shape gr.getContext('2d'),up.getContext('2d')
     @ground = new Image
@@ -214,12 +214,13 @@ class GroundSprite extends CanvasSprite
     for i in [0 ... @map.length]
       for _j in [0 ... @map[i].length]
         j = @map[i].length - _j - 1 
-        [vx,vy] = @p2ism i*@size ,j*@size
+        [vx,vy] = @p2ism i*@scale ,j*@scale
+
         unless @map[i][j] # 通路
           g.init Color.i(192,192,192)
           g.moveTo vx,vy
           g.lineTo(x,y) for [x,y] in [
-            [vx+16,vy+8],[vx+32,vy],[vx+16,vy-8]
+            [vx+@scale/2,vy+@scale/4],[vx+@scale,vy],[vx+@scale/2,vy-@scale/8]
           ]
           g.lineTo vx,vy
           g.fill()
@@ -258,30 +259,32 @@ class GroundSprite extends CanvasSprite
 
   draw:(g,cx,cy)->
     [ix,iy]= @ip
-    g.drawImage(@ground, cx-320+ix, cy+iy-240, 640, 480, 0 , 0 , 640, 480)
-  draw_upper:(g,cx,cy)->
-    [ix,iy]= @ip
-    g.drawImage(@upper, cx-320+ix, cy+iy-240, 640, 480, 0 , 0 , 640, 480)
+    size_x = @scale*@x
+    size_y = @scale*@y
+    g.drawImage(@ground, cx-size_x/2+ix, cy+iy-size_y/2, size_x, size_y, 0 , 0 , size_x, size_y)
+
+  # draw_upper:(g,cx,cy)->
+  #   [ix,iy]= @ip
+  #   g.drawImage(@upper, cx-ix, cy+iy-240, 640, 480, 0 , 0 , 640, 480)
 
 
 class GameRenderer
-  constructor : (id,width,height)->
+  constructor : (@x,@y,@scale)->
     # @map = null
     @uid = null
     @cam = [0,0]
     @_camn = [0,0]
     @mouse = [0,0]
-    @scale = 32
     @canvas =  document.getElementById "game"
     @g = @canvas.getContext '2d'
 
-    @canvas.width = 640
-    @canvas.height = 480
+    @canvas.width = @x*@scale
+    @canvas.height = @y*@scale
 
-    @player_sp = new PlayerSprite 32
-    @char_sp = new CharSprite 32
-    @monster_sp = new MonsterSprite 32
-    @tile_sp = new TileSprite 32
+    @player_sp = new PlayerSprite @scale
+    @char_sp = new CharSprite @scale
+    @monster_sp = new MonsterSprite @scale
+    @tile_sp = new TileSprite @scale
 
     window.onkeydown = (e)->
       e.preventDefault()
@@ -294,10 +297,11 @@ class GameRenderer
       soc.emit "keyup", code:key
 
     @canvas.onmousedown = (e)=>
-      soc.emit "click_map", x:x,y:y
+      console.log e
+      soc.emit "click_map", x:e.offsetX,y:e.offsetY
 
   create_map:(map)->
-    @gr_sp = new GroundSprite map ,32
+    @gr_sp = new GroundSprite map ,@scale
 
   to_ism_native : (x,y)->
     [(x+y)/2
@@ -307,12 +311,12 @@ class GameRenderer
   to_ism : (x,y)->
     [cx,cy] = @cam
     [
-     320-cx+(x+y)/2
-     240-cy+(x-y)/4
+     @scale*@x/2-cx+(x+y)/2
+     @scale*@y/2-cy+(x-y)/4
     ]
 
   ism2pos : (x,y)->
-    [dx,dy] = [x-320,y-240]
+    [dx,dy] = [x-@scale*@x/2,y-@scale*@y/2]
     [cx,cy] = @_camn
     [
       cx+dx+2*dy
@@ -376,5 +380,5 @@ class GameRenderer
         @g.init Color.Black
         @g.fillText ''+~~(hp) , vx-6,vy-12
         @g.fillText n , vx-10,vy+6
-    @gr_sp?.draw_upper(@g,cx,cy)
+    # @gr_sp?.draw_upper(@g,cx,cy)
 

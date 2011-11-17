@@ -76,13 +76,15 @@ div class:"container-fluid row",->
         #   $$ "{{/each}}"
         # $$ "{{/if}}"
 
-
 coffeescript ->
   canvas =  document.getElementById "game"
-  canvas.width = 640
-  canvas.height = 480
+  x = 20
+  y = 15
+  cell = 32
+  canvas.width = x * cell
+  canvas.height = y * cell
   $ =>
     $.get '/api/id' , (name)=>
       soc.emit 'login', name:name
-      window.grr = new GameRenderer
+      window.grr = new GameRenderer x,y,cell
       ko.applyBindings view

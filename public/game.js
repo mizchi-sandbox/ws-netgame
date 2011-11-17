@@ -1,4 +1,4 @@
-var Canvas, CanvasSprite, CharSprite, Color, GameRenderer, GroundSprite, ImageSprite, MonsterSprite, PlayerSprite, Sprite, TileSprite, Util, abs, cos, include, sin, sqrt;
+var Canvas, CanvasSprite, CharSprite, Color, GameRenderer, GroundSprite, ImageSprite, MonsterSprite, PlayerSprite, Sprite, Util, abs, cos, include, sin, sqrt;
 var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
   for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
   function ctor() { this.constructor = child; }
@@ -155,13 +155,6 @@ Sprite = (function() {
     yd = Math.pow(this.y - target.y, 2);
     return Math.sqrt(xd + yd);
   };
-  Sprite.prototype.get_relative = function(cam) {
-    var pos;
-    return pos = {
-      vx: 320 + this.x - cam.x,
-      vy: 240 + this.y - cam.y
-    };
-  };
   Sprite.prototype.find_obj = function(group_id, targets, range) {
     return targets.filter(__bind(function(t) {
       return t.group === group_id && this.get_distance(t) < range;
@@ -269,42 +262,20 @@ MonsterSprite = (function() {
   };
   return MonsterSprite;
 })();
-TileSprite = (function() {
-  __extends(TileSprite, CanvasSprite);
-  function TileSprite() {
-    TileSprite.__super__.constructor.apply(this, arguments);
-  }
-  TileSprite.prototype.shape = function(g) {
-    var x, y, _i, _len, _ref, _ref2;
-    g.init(Color.Black);
-    g.moveTo(0, 16);
-    _ref = [[16, 24], [32, 16], [16, 8]];
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      _ref2 = _ref[_i], x = _ref2[0], y = _ref2[1];
-      g.lineTo(x, y);
-    }
-    g.lineTo(0, 16);
-    return g.fill();
-  };
-  TileSprite.prototype.draw = function(g, x, y) {
-    return g.drawImage(this.img, x, y);
-  };
-  return TileSprite;
-})();
 GroundSprite = (function() {
   __extends(GroundSprite, CanvasSprite);
-  function GroundSprite(map, size) {
+  function GroundSprite(map, scale) {
     var gr, mx, my, up, _ref;
     this.map = map;
-    this.size = size != null ? size : 32;
+    this.scale = scale != null ? scale : 32;
     this.ip = [800, 1600];
-    _ref = [this.map.length * this.size, this.map[0].length * this.size], mx = _ref[0], my = _ref[1];
+    _ref = [this.map.length * this.scale, this.map[0].length * this.scale], mx = _ref[0], my = _ref[1];
     gr = document.createElement('canvas');
-    gr.width = 32 * 100;
-    gr.height = 32 * 100;
+    gr.width = this.scale * 100;
+    gr.height = this.scale * 100;
     up = document.createElement('canvas');
-    up.width = 32 * 100;
-    up.height = 32 * 100;
+    up.width = this.scale * 100;
+    up.height = this.scale * 100;
     this.shape(gr.getContext('2d'), up.getContext('2d'));
     this.ground = new Image;
     this.ground.src = gr.toDataURL();
@@ -326,13 +297,13 @@ GroundSprite = (function() {
         _results2 = [];
         for (_j = 0, _ref2 = this.map[i].length; 0 <= _ref2 ? _j < _ref2 : _j > _ref2; 0 <= _ref2 ? _j++ : _j--) {
           j = this.map[i].length - _j - 1;
-          _ref3 = this.p2ism(i * this.size, j * this.size), vx = _ref3[0], vy = _ref3[1];
+          _ref3 = this.p2ism(i * this.scale, j * this.scale), vx = _ref3[0], vy = _ref3[1];
           _results2.push((function() {
             var _i, _len, _ref4, _ref5;
             if (!this.map[i][j]) {
               g.init(Color.i(192, 192, 192));
               g.moveTo(vx, vy);
-              _ref4 = [[vx + 16, vy + 8], [vx + 32, vy], [vx + 16, vy - 8]];
+              _ref4 = [[vx + this.scale / 2, vy + this.scale / 4], [vx + this.scale, vy], [vx + this.scale / 2, vy - this.scale / 8]];
               for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
                 _ref5 = _ref4[_i], x = _ref5[0], y = _ref5[1];
                 g.lineTo(x, y);
@@ -350,32 +321,31 @@ GroundSprite = (function() {
     return _results;
   };
   GroundSprite.prototype.draw = function(g, cx, cy) {
-    var ix, iy, _ref;
+    var ix, iy, size_x, size_y, _ref;
     _ref = this.ip, ix = _ref[0], iy = _ref[1];
-    return g.drawImage(this.ground, cx - 320 + ix, cy + iy - 240, 640, 480, 0, 0, 640, 480);
-  };
-  GroundSprite.prototype.draw_upper = function(g, cx, cy) {
-    var ix, iy, _ref;
-    _ref = this.ip, ix = _ref[0], iy = _ref[1];
-    return g.drawImage(this.upper, cx - 320 + ix, cy + iy - 240, 640, 480, 0, 0, 640, 480);
+    size_x = this.scale * this.x;
+    size_y = this.scale * this.y;
+    return g.drawImage(this.ground, cx - size_x / 2 + ix, cy + iy - size_y / 2, size_x, size_y, 0, 0, size_x, size_y);
   };
   return GroundSprite;
 })();
 GameRenderer = (function() {
-  function GameRenderer(id, width, height) {
+  function GameRenderer(x, y, scale) {
+    this.x = x;
+    this.y = y;
+    this.scale = scale;
     this.uid = null;
     this.cam = [0, 0];
     this._camn = [0, 0];
     this.mouse = [0, 0];
-    this.scale = 32;
     this.canvas = document.getElementById("game");
     this.g = this.canvas.getContext('2d');
-    this.canvas.width = 640;
-    this.canvas.height = 480;
-    this.player_sp = new PlayerSprite(32);
-    this.char_sp = new CharSprite(32);
-    this.monster_sp = new MonsterSprite(32);
-    this.tile_sp = new TileSprite(32);
+    this.canvas.width = this.x * this.scale;
+    this.canvas.height = this.y * this.scale;
+    this.player_sp = new PlayerSprite(this.scale);
+    this.char_sp = new CharSprite(this.scale);
+    this.monster_sp = new MonsterSprite(this.scale);
+    this.tile_sp = new TileSprite(this.scale);
     window.onkeydown = function(e) {
       var key;
       e.preventDefault();
@@ -393,14 +363,15 @@ GameRenderer = (function() {
       });
     };
     this.canvas.onmousedown = __bind(function(e) {
+      console.log(e);
       return soc.emit("click_map", {
-        x: x,
-        y: y
+        x: e.offsetX,
+        y: e.offsetY
       });
     }, this);
   }
   GameRenderer.prototype.create_map = function(map) {
-    return this.gr_sp = new GroundSprite(map, 32);
+    return this.gr_sp = new GroundSprite(map, this.scale);
   };
   GameRenderer.prototype.to_ism_native = function(x, y) {
     return [(x + y) / 2, (x - y) / 4];
@@ -408,16 +379,16 @@ GameRenderer = (function() {
   GameRenderer.prototype.to_ism = function(x, y) {
     var cx, cy, _ref;
     _ref = this.cam, cx = _ref[0], cy = _ref[1];
-    return [320 - cx + (x + y) / 2, 240 - cy + (x - y) / 4];
+    return [this.scale * this.x / 2 - cx + (x + y) / 2, this.scale * this.y / 2 - cy + (x - y) / 4];
   };
   GameRenderer.prototype.ism2pos = function(x, y) {
     var cx, cy, dx, dy, _ref, _ref2;
-    _ref = [x - 320, y - 240], dx = _ref[0], dy = _ref[1];
+    _ref = [x - this.scale * this.x / 2, y - this.scale * this.y / 2], dx = _ref[0], dy = _ref[1];
     _ref2 = this._camn, cx = _ref2[0], cy = _ref2[1];
     return [cx + dx + 2 * dy, cy + dx - 2 * dy];
   };
   GameRenderer.prototype.render = function(data) {
-    var PI, cx, cy, hp, i, id, lv, n, objs, oid, tid, toid, tvx, tvy, tx, ty, vx, vy, x, y, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+    var PI, cx, cy, hp, i, id, lv, n, objs, oid, tid, toid, tvx, tvy, tx, ty, vx, vy, x, y, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _results;
     if (data == null) {
       data = {};
     }
@@ -436,45 +407,15 @@ GameRenderer = (function() {
     if ((_ref3 = this.gr_sp) != null) {
       _ref3.draw(this.g, cx, cy);
     }
+    _results = [];
     for (_j = 0, _len2 = objs.length; _j < _len2; _j++) {
       i = objs[_j];
       _ref4 = i.o, x = _ref4[0], y = _ref4[1], id = _ref4[2], oid = _ref4[3];
       _ref5 = i.s, n = _ref5.n, hp = _ref5.hp, lv = _ref5.lv;
       _ref6 = this.to_ism(x * this.scale, y * this.scale), vx = _ref6[0], vy = _ref6[1];
-      if ((-64 < vx && vx < 706) && (-48 < vy && vy < 528)) {
-        if (id === this.uid) {
-          this.player_sp.draw(this.g, vx, vy);
-          this.g.init(Color.Blue);
-        }
-        if (id > 1000) {
-          this.char_sp.draw(this.g, vx, vy);
-          this.g.init(Color.Green);
-        } else {
-          this.monster_sp.draw(this.g, vx, vy);
-          this.g.init(Color.Red);
-        }
-        if (i.t) {
-          _ref7 = i.t, tx = _ref7[0], ty = _ref7[1], tid = _ref7[2], toid = _ref7[3];
-          _ref8 = this.to_ism(tx * this.scale, ty * this.scale), tvx = _ref8[0], tvy = _ref8[1];
-          this.g.beginPath();
-          this.g.moveTo(vx, vy);
-          this.g.lineTo(tvx, tvy);
-          this.g.stroke();
-          PI = Math.PI;
-          this.g.beginPath();
-          this.g.arc(tvx, tvy, ~~(this.scale / 2), -PI / 6, PI / 6, false);
-          this.g.stroke();
-          this.g.beginPath();
-          this.g.arc(tvx, tvy, ~~(this.scale / 2), 5 * PI / 6, 7 * PI / 6, false);
-          this.g.stroke();
-          this.g.stroke();
-        }
-        this.g.init(Color.Black);
-        this.g.fillText('' + ~~hp, vx - 6, vy - 12);
-        this.g.fillText(n, vx - 10, vy + 6);
-      }
+      _results.push((-64 < vx && vx < 706) && (-48 < vy && vy < 528) ? (id === this.uid ? (this.player_sp.draw(this.g, vx, vy), this.g.init(Color.Blue)) : void 0, id > 1000 ? (this.char_sp.draw(this.g, vx, vy), this.g.init(Color.Green)) : (this.monster_sp.draw(this.g, vx, vy), this.g.init(Color.Red)), i.t ? ((_ref7 = i.t, tx = _ref7[0], ty = _ref7[1], tid = _ref7[2], toid = _ref7[3], _ref7), (_ref8 = this.to_ism(tx * this.scale, ty * this.scale), tvx = _ref8[0], tvy = _ref8[1], _ref8), this.g.beginPath(), this.g.moveTo(vx, vy), this.g.lineTo(tvx, tvy), this.g.stroke(), (PI = Math.PI, Math), this.g.beginPath(), this.g.arc(tvx, tvy, ~~(this.scale / 2), -PI / 6, PI / 6, false), this.g.stroke(), this.g.beginPath(), this.g.arc(tvx, tvy, ~~(this.scale / 2), 5 * PI / 6, 7 * PI / 6, false), this.g.stroke(), this.g.stroke()) : void 0, this.g.init(Color.Black), this.g.fillText('' + ~~hp, vx - 6, vy - 12), this.g.fillText(n, vx - 10, vy + 6)) : void 0);
     }
-    return (_ref9 = this.gr_sp) != null ? _ref9.draw_upper(this.g, cx, cy) : void 0;
+    return _results;
   };
   return GameRenderer;
 })();
