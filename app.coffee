@@ -128,7 +128,7 @@ require('zappa') config.port, ->
       seq = ['one','two','three','four','five','six','seven','eight','nine','zero']
       buff = []
       for i in seq 
-        if s = player.skills[i]
+        if s = player.skills.sets[i]
           buff.push ~~(100*s.ct/s.CT)
       @io.sockets.socket(id).emit 'update_ct',cooltime:buff
 
@@ -215,7 +215,7 @@ require('zappa') config.port, ->
   @post '/register': ->
     console.log 'create account', @body
     name = @body.name
-    password = @body.password
+    pass = @body.pass
     race = @body.race
     cls = @body.class
 
@@ -225,7 +225,7 @@ require('zappa') config.port, ->
         return
 
       savedata = create_new(name,race,cls)
-      savedata.password = password
+      savedata.pass = pass
 
       Users.save @body.name , savedata, (e)=>
         @session.name = name
@@ -235,82 +235,14 @@ require('zappa') config.port, ->
   @post '/login': ->
     console.log @body
     name = @body.name
-    password = @body.password
+    pass = @body.pass
 
     Users.get name,(e,doc)=>
       console.log e if e
-      if password is doc.password
+      if pass is doc.pass
         @session.name = doc.name
         @redirect '/'
       else 
         @send 'no such a user'
-
-  @view login:->
-    doctype 5
-    html ->
-      head lang:'ja',->
-        title 'Dir-Net'
-        (link rel:"stylesheet",type:"text/css",href:i) for i in [
-          "/bootstrap.min.css"
-        ]
-      body ->
-        div class:"container-fluid",->
-          h1 -> "Dir-Net"
-          div class:"content",->
-            # a href:"/verify",-> "Twitterでログイン"
-
-            p -> "キャラクターを作成"
-            form action:'/register',method:"POST",->
-              p ->
-                input name:'name'
-                input type:'password', name:'pass'
-              p ->
-                span "種族" 
-                fieldset ->
-                  input type:"radio",name:"race",value:"human",checked:true,-> "human"
-                  span "human"
-                  br ''
-
-                  input type:"radio",name:"race",value:"elf",-> "elf"
-                  span "elf"
-                  br ''
-
-                  input type:"radio",name:"race",value:"dwarf",->"dwarf"
-                  span "dwarf"
-                  br ''
-              p ->
-                span "クラス" 
-                fieldset ->
-                  input type:"radio",name:"class",value:"Lord",checked:true,->"Lord"
-                  span -> "Lord"
-                
-              p -> input type:'submit',value:'キャラクターを作成'
-              
-            hr "clear"
-            
-            p -> "ログイン"
-            form action:'/login',method:"POST",->
-              input name:'name'
-              input type:'password', name:'pass'
-              input type:'submit',value:'ログイン'
-
-          div class:'guide',->
-            p -> '数字キーで技セット'
-            p -> 'スペースでターゲット切り替え'
-            dl ->
-              dt 'Atack'
-              dd '攻撃'
-
-              dt 'Smash'
-              dd 'ノックバック付き強攻撃 '
-
-              dt 'Heal'
-              dd '回復'
-
-              dt 'Meteor'
-              dd 'ターゲット周辺を巻き込む魔法攻撃'
-
-              dt 'Lightning'
-              dd '周辺にチェインする魔法の雷'
 
 

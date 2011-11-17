@@ -244,13 +244,38 @@ exports.Meteor = Meteor
 exports.Lightning = Lightning
 
 class SkillBox
-  constructor:(actor , data={})->
-    @data = data
-    for i in data
-      if i.data 
-        @[i.key] = new exports[i.data.name](actor, i.data.lv)
+  constructor:(@actor , @learned={},@preset={})->
+    @selected_key = 'one'
+    @sets = {
+      one:null
+      two:null
+      three:null
+      four:null
+      five:null
+      six:null
+      seven:null
+      nine:null
+      zero:null
+    }
+    @build(@preset)
+
+  set_key : (key,skill_name)->
+    lv = @learned[skill_name]
+    @sets[key] = new exports[skill_name](@actor,lv)
+
+  build : (preset)->
+    for key,skill_name of preset
+      @set_key key, skill_name
+      # lv = @learned[skill_name]
+      # @sets[key] = new exports[skill_name](@actor,lv)
+
+    # for i in data
+    #   if i.data 
+    #     @[i.key] = new exports[i.data.name](actor, i.data.lv)
 
   toData:->
-    ((key:i,data:@[i]?.toData()) for i in seq)
+    learned : @learned
+    preset : @preset
+    # ((key:i,data:@[i]?.toData()) for i in seq)
 
 exports.SkillBox = SkillBox

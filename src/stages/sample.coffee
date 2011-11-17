@@ -8,7 +8,7 @@ require './../Util'
 class RandomStage extends Stage
   constructor: (@context) ->
     super()
-    @_map = @create_map 60,60,15
+    @_map = @create_map 120,120,15
     @max_object_count = 10
     @cnt = 0
     @players = {}

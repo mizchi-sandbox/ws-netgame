@@ -42,7 +42,7 @@ class Character extends Sprite
   action:(target)->
     @move()
     for i in seq
-      @skills[i].charge(false) if @skills[i]
+      @skills.sets[i].charge(false) if @skills.sets[i]
     @selected_skill.charge(true) #update(target)
     @selected_skill.exec(target) #update(target)
 
@@ -128,7 +128,6 @@ class Character extends Sprite
 
     if @destination
       @update_path( [~~(@x),~~(@y)],[~~(@destination.x),~~(@destination.y)] )
-      console.log @_path
       @to = @_path.shift()
       @destination = null
       @_on_going_destination = true
@@ -247,26 +246,20 @@ class Goblin extends Character
     @race = 'Goblin'
     # @id = ObjectId.Monster
     @dir = 0
-    @status = new Status {lv:1,str: 8, int: 4, dex:4},1
+
+    race = racial_data['goblin']
+    race.lv = 1
+
+    @status = new Status race,1
     @status.trace_range = 13
     super(@scene ,@x,@y,@group,@status)
-    @skills = new SkillBox @,[
-      {
-        key : 'one'
-        data :
-          name : 'Atack'
-          lv   : 1
-      },
-      {
-        key : 'two'
-        data :
-          name : 'Heal'
-          lv   : 1
-      }
-    ]
+    @skills = new SkillBox @,{Atack:1,Heal:1},{
+      one:"Atack"
+      two:"Heal"
+    }
     # @skills.one = new Skill.Atack(@,3)
     # @skills.two = new Skill.Heal(@)
-    @selected_skill = @skills.one
+    @selected_skill = @skills.sets.one
     @equipment = new Equipment
       main_hand : 
         name : 'dagger'
@@ -275,9 +268,9 @@ class Goblin extends Character
   select_skill: ()->
     if @status.hp < 5
       last = @selected_skill
-      @selected_skill = @skills['two']
+      @selected_skill = @skills.sets['two']
     else
-      @selected_skill = @skills['one']
+      @selected_skill = @skills.sets['one']
 
   die : (actor)->
     super actor
@@ -297,9 +290,10 @@ class Player extends Character
     @status = new Status data.status
     @equipment = new Equipment data.equipment
 
-    # @skills.one = new Atack @
-    @skills = new SkillBox @,data.skills
-    @selected_skill = @skills.one
+
+    @skills = new SkillBox @, data.skills.learned, data.skills.preset
+
+    @selected_skill = @skills.sets.one
 
     @status.active_range = 4
     @status.trace_range = 4
@@ -307,8 +301,8 @@ class Player extends Character
   select_skill :()->
     for k,v of @keys
       if v and k in ["one","two","three","four","five"]
-      # if v and k in ["one"]
-        return @selected_skill = @skills[k]
+        if @skills.sets[k]
+          return @selected_skill = @skills.sets[k]
 
   update:(objs)->
     enemies = @find_obj(ObjectId.get_enemy(@),objs,@status.active_range)
@@ -445,7 +439,6 @@ class Status
       @[at] +=1
       @rebuild()
 
-      console.log 'call on changed'
       @on_status_change()
       true
     else
@@ -453,7 +446,6 @@ class Status
 
 
   get_exp:(point)->
-    console.log "get :"+point
     @exp += point
     if @exp >= @next_lv
       @level_up()
@@ -483,52 +475,39 @@ class ItemBox
     @items = data or []
   toData :->
     @items
-exports.create_new = (name,race,cls)->
+
+exports.create_new = (name,racial_name,cls_name)->
   #mock
-  p = new Player null ,{}
+  cls_data = class_data[cls_name]
+  r = racial_data[racial_name]
 
-  st = class_data[cls]
-  r = racial_data[race]
-  console.log 'making data`'
-  console.log class_data
-  console.log cls
+  _status = 
+    str : cls_data.status.str + r.str
+    int : cls_data.status.int + r.int
+    dex : cls_data.status.dex + r.dex
 
-  st.str += r.str
-  st.int += r.int
-  st.dex += r.dex
-
-
-  status  = new Status st
-  status.race = race 
-  status.class = cls
+  status  = new Status _status
+  status.race = racial_name
+  status.class = cls_name
   status.gold = 0
   status.exp = 0
   status.lv = 1
   status.sp = 3
-  status.bp = 3
+  status.bp = 2
 
   equipment = new Equipment 
     main_hand : 'dagger'
-  items = new ItemBox {}
 
-  atack = new Skill.Atack
-  skills = new SkillBox p
+  items = new ItemBox {}
+  skills = new SkillBox p , cls_data.learned, cls_data.preset
+
   data = 
     name : name
     status : status.toData()
     equipment : equipment.toData()
     items : items.toData()
-    skills:skills.toData()
-
+    skills: skills.toData()
   p = new Player null , data
-  p.skills.one = new Skill.Atack p,1
-  p.skills.two = new Skill.Smash p,1
-  p.skills.three = new Skill.Heal p,1
-  p.skills.four = new Skill.Meteor p,1
-  p.skills.five = new Skill.Lightning p,1
-  p.selected_skill = p.skills.one
-
-  console.log p.toData()
   p.toData()
 
 

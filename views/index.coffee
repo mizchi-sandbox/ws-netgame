@@ -53,18 +53,30 @@ div class:"container-fluid row",->
 
 
   div class:"span12",->
-    div class:"row" , ->
-      jqtpl 'SkillInfo', ->
-        $$ "{{if CharInfo()}}"
-        $$ "{{each(i,sk) CharInfo().skills}}"
-        $$ "{{if sk.data}}"
-        div class:'span1' ,->
-          p "[${i+1}] ${sk.data.name}.${sk.data.lv}"
-          p "CT:${CoolTime()[i]}%"
-        $$ "{{/if}}"
+    jqtpl 'SkillInfo', ->
+      $$ "{{if CharInfo()}}"
+      div class:"row",->
+        $$ "{{each(i,sk) CharInfo().skills.preset}}"
+        div class:"span2",->
+          $$ "${sk}"
+          # $$ "${sk}:${CharInfo().skills.learned(sk)}"
         $$ "{{/each}}"
-        $$ "{{/if}}"
-          # dd -> "${sk.data.name}:lv${sk.data.lv}"
+        # $$ "{{if sk.data}}"
+      $$ "{{/if}}"
+      
+      div class:"row" , ->
+        $$ "{{each(i,ct) CoolTime}}"
+        div class:'span2' ,->
+          p "[${i+1}] ${ct}%"
+        $$ "{{/each}}"
+
+
+        # div class:'span1' ,->
+        #   # p "[${i+1}] ${sk.data.name}.${sk.data.lv}"
+        #   p "CT:${CoolTime()[i]}%"
+        # # $$ "{{/if}}"
+        # $$ "{{/each}}"
+        #   # dd -> "${sk.data.name}:lv${sk.data.lv}"
 
     canvas id:"game",style:"float:left;background-color:black;"
 

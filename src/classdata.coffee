@@ -68,24 +68,29 @@ class ShadowServant
 
 ClassData = 
   Lord : 
-    str : 11
-    int : 9
-    dex : 10
-    skills: 
-      WeaponMastery: 0
-      LanceMastery: 0
+    status:
+      str : 1
+      int : -1
+      dex : 0
 
-      ArmorMastery : 0
-      HolyMastery  : 0
+    preset : 
+      one : "Atack"
+      two :  "Heal"
 
-      ThunderMastery  : 0
+    learned:
+      Atack : 1
       Lightning: 0 
+      Heal: 1
+      ThunderMastery  : 0
 
   Warrior : 
-    str : 14
-    int : 6
-    dex : 9
+    str : 4
+    int : -4
+    dex : -1
     skills: 
+      Atack : 1
+      Smash : 1
+
       WeaponMastery: 1
       SwordMastery : 0
       LanceMastery : 0
@@ -96,19 +101,29 @@ ClassData =
       EnvokeElement : 0
 
   Rogue : 
-    str : 8
-    int : 7
-    dex : 14
+    str : -2
+    int : -3
+    dex : +4
     skills: 
+      Atack : 1
+
       DaggerMastery: 0
       PoizonMastery: 0
       Tricky: 0
 
   Sorcerer : 
-    str : 5
-    int : 15
-    dex : 9
-    skills: 
+
+    str : -5
+    int : +5
+    dex : -1
+
+    initial_keyset : 
+      one : "Lightning"
+      two : "Meteor"
+
+    skills:
+      Lightning:1
+      Meteor: 1 
       FireMastery   : 0
       FireArrow : 0
       Meteor : 0
@@ -123,9 +138,9 @@ ClassData =
 class JobClass
 class Lord extends JobClass
   constructor:->
-    @str = 10
-    @int = 10
-    @dex = 10 
+    @str = 0
+    @int = 0
+    @dex = 0 
 
   toData:->
     str:@str
@@ -142,18 +157,6 @@ class Rogue extends JobClass
     str:@str
     int:@int
     dex:@dex
-
-RacialData = 
-  human :
-    str : 0
-    int : 0
-    dex : 0
-    
-  human :
-    str : 0
-    int : 0
-    dex : 0
-
 
 
 exports.ClassData = ClassData

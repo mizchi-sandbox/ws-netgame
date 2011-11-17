@@ -1,15 +1,25 @@
 exports.RacialData = 
   human : 
- 	  str: 0
- 	  int: 0
- 	  dex: 1
+ 	  str: 10
+ 	  int: 10
+ 	  dex: 11
 
   elf : 
-	  str: -1
-	  int: 2
-	  dex: 0
+	  str: 9
+	  int: 12
+	  dex: 10
 
   dwarf : 
- 	  str: 2
- 	  int: -1
-    dex: 0
+ 	  str: 12
+ 	  int: 9
+    dex: 10
+
+  goblin : 
+    str: 8
+    int: 4
+    dex: 4
+
+  Ent : 
+    str: 11
+    int: 14
+    dex: 4
