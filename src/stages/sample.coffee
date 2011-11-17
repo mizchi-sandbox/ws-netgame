@@ -1,4 +1,5 @@
-{Player, Goblin} = require('./../char')
+{Goblin} = require('./../char')
+{Player} = require('./../Player')
 {ObjectId} = require('./../ObjectId')
 {MoneyObject} = require('./../sprites')
 require './../Util'

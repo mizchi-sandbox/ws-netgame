@@ -8,8 +8,6 @@ Skill = require('./skills')
 {SkillBox} = require './skills'
 Skills = require './skills'
 seq = ['one','two','three','four','five','six','seven','eight','nine','zero']
-racial_data = require('./racialdata').RacialData
-class_data = require('./classdata').ClassData
 
 class Character extends Sprite
   constructor: (@scene , @x=0,@y=0,@group=ObjectId.Enemy ,status={}) ->
@@ -239,6 +237,13 @@ class Character extends Sprite
       equipment : @equipment.toData() 
       items : @items.toData()
 
+{Status} = require './Status'
+{Equipment} = require './Equipment'
+{ItemBox} = require './ItemBox'
+racial_data = require('./racialdata').RacialData
+class_data = require('./classdata').ClassData
+{random,sqrt,min,max,sin,cos} = Math
+
 class Goblin extends Character
   name : "Goblin"
   constructor: (@scene , @group,lv=1) ->
@@ -279,238 +284,5 @@ class Goblin extends Character
   exec:(actor,objs)->
     super actor,objs
 
-class Player extends Character
-  # Controller Implement
-  constructor: (@scene, data = {},@group=ObjectId.Player) ->
-    @name = data.name
-    @password = data.password
-
-    @set_pos()
-    super(@scene,@x,@y,@group)
-    @status = new Status data.status
-    @equipment = new Equipment data.equipment
-
-
-    @skills = new SkillBox @, data.skills.learned, data.skills.preset
-
-    @selected_skill = @skills.sets.one
-
-    @status.active_range = 4
-    @status.trace_range = 4
-
-  select_skill :()->
-    for k,v of @keys
-      if v and k in ["one","two","three","four","five"]
-        if @skills.sets[k]
-          return @selected_skill = @skills.sets[k]
-
-  update:(objs)->
-    enemies = @find_obj(ObjectId.get_enemy(@),objs,@status.active_range)
-
-    if @keys.space is 1 and @_last_space_ is 0
-      @shift_target(enemies)
-    @_last_space_ = @keys.space
-
-    range = @selected_skill.range
-    @status.active_range = range
-    @status.trace_range = range
-
-    super objs,@scene
-
-  set_destination:(x,y)->
-    @target = x:x,y:y,is_dead:(->false),status:{get_param:->}
-
-  wander : ->
-
-  move: ->
-    keys = @keys
-
-    sum = 0
-    for i in [keys.right , keys.left , keys.up , keys.down]
-      sum++ if i
-
-    if sum is 0
-      if ++@_wait > 120
-        return
-      else
-        super()
-        return
-    else if sum > 1
-      move = @status.speed * 0.7
-    else
-      move = @status.speed
-    @_on_going_destination = false
-    @to = null
-    @_wait = 0
-
-    if keys.right
-      if @scene.collide( @x+move , @y )
-        @x = ~~(@x)+1-0.1
-      else
-        @x += move
-    if keys.left
-      if @scene.collide( @x-move , @y )
-        @x = ~~(@x)+0.1
-      else
-        @x -= move
-    if keys.down
-      if @scene.collide( @x , @y-move )
-        @y = ~~(@y)+0.1
-      else
-        @y -= move
-    if keys.up
-      if @scene.collide( @x , @y+move )
-        @y = ~~(@y)+1-0.1
-      else
-        @y += move
-
-
-class Equipment
-  constructor:(data={})->
-    @main_hand = data.main_hand or null
-    @sub_hand = data.sub_hand or null
-    @body = data.body or null
-    @arm = data.arm or null
-    @leg = data.leg or null
-    @ring1 = data.ring1 or null
-    @ring2 = data.ring2 or null
-
-  toData : ->
-    main_hand: @main_hand
-    sub_hand : @sub_hand
-    body : @body
-    arm : @arm
-    leg : @leg
-    ring1 : @ring1
-    ring2 : @ring2
-
-
-class Status
-  constructor: (data = {}) ->
-    @lv = data.lv or 0
-    @exp = data.exp or 0
-    @gold = data.gold or 10 
-
-    @sp = data.sp or 0  
-    @bp = data.bp or 0
-    @class = data.class or null
-    @race = data.race or null
-    @str = data.str or 5
-    @int = data.int or 5
-    @dex = data.dex or 5
-
-    @rebuild()
-
-  rebuild:()->
-    @HP = @str*10
-    @MP = @int*10
-    @hp = @HP
-    @mp = @MP
-
-    @atk = @str
-    @mgc = @int
-    @def = @str / 10
-    @res = @int / 10
-
-    @regenerate = ~~(@str/10)
-    @active_range = 4
-    @speed = @dex/40
-
-    @next_lv = @lv * 50
-
-  level_up: ()->
-    @lv++
-    @exp = 0
-    @sp++
-    @bp++ if @lv%3 is 0 
-    @next_lv = @lv * 50
-    @rebuild()
-    @on_status_change()
-
-
-  on_status_change :->
-    
-  use_skill_point:(sname)->
-    # TODO
-
-  use_battle_point:(at)->
-    if @bp>0 and at in ["str","int","dex"]
-      @bp--
-      @[at] +=1
-      @rebuild()
-
-      @on_status_change()
-      true
-    else
-      null
-
-
-  get_exp:(point)->
-    @exp += point
-    if @exp >= @next_lv
-      @level_up()
-      console.log 'level up! to lv.'+@lv
-
-  set_next_exp:()->
-    @next_lv = @lv * 30
-
-  toData : ->
-    class: @class
-    race : @race
-    exp  : @exp
-    lv   : @lv
-    sp   : @sp 
-    bp   : @bp 
-    hp   : @hp
-    HP   : @HP
-    mp   : @mp
-    MP   : @MP
-    str  : @str
-    int  : @int
-    dex  : @dex
-    gold : @gold
-
-class ItemBox
-  constructor : (data)->
-    @items = data or []
-  toData :->
-    @items
-
-exports.create_new = (name,racial_name,cls_name)->
-  #mock
-  cls_data = class_data[cls_name]
-  r = racial_data[racial_name]
-
-  _status = 
-    str : cls_data.status.str + r.str
-    int : cls_data.status.int + r.int
-    dex : cls_data.status.dex + r.dex
-
-  status  = new Status _status
-  status.race = racial_name
-  status.class = cls_name
-  status.gold = 0
-  status.exp = 0
-  status.lv = 1
-  status.sp = 3
-  status.bp = 2
-
-  equipment = new Equipment 
-    main_hand : 'dagger'
-
-  items = new ItemBox {}
-  skills = new SkillBox p , cls_data.learned, cls_data.preset
-
-  data = 
-    name : name
-    status : status.toData()
-    equipment : equipment.toData()
-    items : items.toData()
-    skills: skills.toData()
-  p = new Player null , data
-  p.toData()
-
-
 exports.Goblin = Goblin
-exports.Player = Player
 exports.Character = Character

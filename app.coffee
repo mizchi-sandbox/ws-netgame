@@ -5,7 +5,7 @@ game.start()
 config = require './config'
 nstore = require('nstore')
 Users = nstore.new("savedata.db")
-{create_new} = require './src/char'
+{create_new} = require './src/Player'
 util = require './src/Util'
 
 
