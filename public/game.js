@@ -287,15 +287,15 @@ TileSprite = (function() {
 GroundSprite = (function() {
   __extends(GroundSprite, CanvasSprite);
   function GroundSprite(map, scale) {
-    var gr, mx, my, _ref;
+    var gr;
     this.map = map;
     this.scale = scale != null ? scale : 32;
     this.i_scale = 18;
-    this.ip = [800, 1600];
-    _ref = [this.map.length * this.scale, this.map[0].length * this.scale], mx = _ref[0], my = _ref[1];
+    this.ip = [0, 2000];
     gr = document.createElement('canvas');
     gr.width = this.scale * 100;
-    gr.height = this.scale * 100;
+    gr.height = this.scale * 100 + this.ip[1];
+    this.gr = gr;
     this.shape(gr.getContext('2d'));
     this.ground = new Image;
     this.ground.src = gr.toDataURL();
@@ -346,7 +346,13 @@ GroundSprite = (function() {
     internal_y = this.i_scale * context.y;
     fx = (cx - size_x / 2) * this.i_scale / context.scale;
     fy = (cy - size_y / 2) * this.i_scale / context.scale;
-    return context.g.drawImage(this.ground, fx + ix, fy + iy, internal_x, internal_y, 0, 0, size_x, size_y);
+    try {
+      return context.g.drawImage(this.ground, fx + ix, fy + iy, internal_x, internal_y, 0, 0, size_x, size_y);
+    } catch (e) {
+      console.log('from', fx + ix, fy + iy);
+      console.log('to', fx + ix + internal_x, fy + iy + internal_y);
+      return console.log('size', this.gr.width, this.gr.height);
+    }
   };
   return GroundSprite;
 })();

@@ -80,7 +80,7 @@ coffeescript ->
   canvas =  document.getElementById "game"
   x = 20
   y = 15
-  cell = 32
+  cell = 24
   canvas.width = x * cell
   canvas.height = y * cell
   $ =>
