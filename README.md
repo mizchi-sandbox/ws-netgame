@@ -4,16 +4,40 @@ diabloっぽいネトゲつくろうとしたもの
 GoogleChrome/Firefox4.0以上等、WebSocket対応ブラウザに対応。  
 スマホは確認してないけどキーボード必須。  
 
-
-## How to play ##
----------
-数字キー[1, 2, 3, 4]で技選択。
-敵に近寄ると自動で発動
 ![ss](https://github.com/mizchi/ws-netgame/raw/master/public/ss2.jpg "ss")
 
+## How to play ##
+クラスと種族を選択してキャラ作成  
+
+### ステータスの意味
+* str : 筋力 HP/武器による攻撃の影響
+* int : 賢さ MP/魔法による攻撃の影響
+* dex : 器用 移動速度/命中率/一部のスキルの威力に影響
+
+### Race ###
+
+* Human 平均的 
+* Elf   intが高い
+* Dwarf strが高い
+
+### Class ###
+#### Lord
+* 武器と魔法のデュアルクラス
+* 回復魔法
+
+#### Warrior
+* 物理型
+* ノックバック攻撃
+
+#### Sorcerer 
+* 魔法型
+* 超射程魔法 ＋ 範囲魔法
+
+数字キー[1, 2, 3, 4]で技選択。
+敵に近寄ると自動で発動
 緑が自分。青が他のプレーヤー。赤がモンスター。
 
-## Installing ##
+## Install ##
 $ git clone git://github.com/mizchi/ws-netgame.git  
 $ cd ws-netgame  
 $ npm install .  
@@ -47,7 +71,7 @@ $ node server.js
 * 拡張に備えてコードをリファクタリング
 * nstore採用+Mongo/Redisの依存を排除
 
-### v0.0.1*
+### v0.0.1
 * 公開
 
 ## TODO ##
@@ -63,8 +87,10 @@ $ node server.js
 * アイテムボックスを実装
 * エゴアイテム生成アルゴリズムを実装
 * プレーヤーネームのバリデーション
+* ドキュメントを書く
 
-## Idea ##
+
+## Ideas ##
 やりたいこと  
 
 * Racialに応じたスキル
@@ -73,6 +99,7 @@ $ node server.js
 * 時間に応じてポーションを生成
 * プレーヤーに陣営を設定して対立するように(WoW風)
 * コンソールクライアントを用意 ref: https://github.com/mscdex/node-ncurses
+* ゲームコンセプトと世界観を設定
 
 
 
