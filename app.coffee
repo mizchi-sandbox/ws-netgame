@@ -8,7 +8,6 @@ Users = nstore.new("savedata.db")
 {create_new} = require './src/Player'
 util = require './src/Util'
 
-
 require('zappa') config.port, ->
   @io.configure =>
     @io.set( "log level", 1 )
@@ -75,6 +74,41 @@ require('zappa') config.port, ->
         id : @session.name
     else
       @render login:{layout:false}
+      
+  @post '/register': ->
+    console.log 'create account', @body
+    name = @body.name
+    pass = @body.pass
+    race = @body.race
+    cls = @body.class
+
+    Users.get name,(e,doc)=>
+      if doc
+        @send 'already exist.'
+        return
+
+      savedata = create_new(name,race,cls)
+      savedata.pass = pass
+
+      Users.save @body.name , savedata, (e)=>
+        @session.name = name
+        console.log 'create new character'
+        @redirect '/'
+
+  @post '/login': ->
+    console.log @body
+    name = @body.name
+    pass = @body.pass
+
+    Users.get name,(e,doc)=>
+      console.log e if e
+      if pass is doc.pass
+        @session.name = doc.name
+        @redirect '/'
+      else 
+        @send 'no such a user'
+
+
 
   twoauth = require('./twitter_oauth')
   @get '/verify' : ->
@@ -174,7 +208,6 @@ require('zappa') config.port, ->
   @on keydown: ->
     game.stages.f1.players[@id]?.keys[@data.code] = 1
 
-
   @on keyup: ->
     game.stages.f1.players[@id]?.keys[@data.code] = 0
 
@@ -220,39 +253,5 @@ require('zappa') config.port, ->
     for k,v of game.stages.f1.players
       save v,=>
   ,1000*60*15
-
-
-  @post '/register': ->
-    console.log 'create account', @body
-    name = @body.name
-    pass = @body.pass
-    race = @body.race
-    cls = @body.class
-
-    Users.get name,(e,doc)=>
-      if doc
-        @send 'already exist.'
-        return
-
-      savedata = create_new(name,race,cls)
-      savedata.pass = pass
-
-      Users.save @body.name , savedata, (e)=>
-        @session.name = name
-        console.log 'create new character'
-        @redirect '/'
-
-  @post '/login': ->
-    console.log @body
-    name = @body.name
-    pass = @body.pass
-
-    Users.get name,(e,doc)=>
-      console.log e if e
-      if pass is doc.pass
-        @session.name = doc.name
-        @redirect '/'
-      else 
-        @send 'no such a user'
 
 

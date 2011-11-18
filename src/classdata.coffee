@@ -78,19 +78,22 @@ ClassData =
       two :  "Heal"
 
     learned:
+      WeaponMastery: 1
       Atack : 1
-      Lightning: 0 
       Heal: 1
-      ThunderMastery  : 0
+      Lightning: 0 
 
   Warrior : 
-    str : 4
-    int : -4
-    dex : -1
-    skills: 
+    status:
+      str : 4
+      int : -4
+      dex : -1
+    preset : 
+      one : "Atack"
+      two : "Smash"
+    learned: 
       Atack : 1
       Smash : 1
-
       WeaponMastery: 1
       SwordMastery : 0
       LanceMastery : 0
@@ -101,39 +104,53 @@ ClassData =
       EnvokeElement : 0
 
   Rogue : 
-    str : -2
-    int : -3
-    dex : +4
-    skills: 
-      Atack : 1
+    status:
+      str : -2
+      int : -3
+      dex : +4
 
+    preset : 
+      one : "Atack"
+    learned: 
+      Atack : 1
       DaggerMastery: 0
       PoizonMastery: 0
       Tricky: 0
 
   Sorcerer : 
+    status:
+      str : -4
+      int : +4
+      dex : -1
 
-    str : -5
-    int : +5
-    dex : -1
-
-    initial_keyset : 
+    preset : 
       one : "Lightning"
       two : "Meteor"
 
-    skills:
+    learned:
+      MagicMastery  : 0
       Lightning:1
       Meteor: 1 
-      FireMastery   : 0
-      FireArrow : 0
-      Meteor : 0
+      # FireMastery   : 0
+      # FireArrow : 0
 
-      IceMastery    : 0
-      ThunderMastery: 0
-      Lightning: 0 
+      # IceMastery    : 0
+      # ThunderMastery: 0
+      # Lightning: 0 
 
-      PoizonMastery : 0
-      MagicMastery  : 0
+      # PoizonMastery : 0
+
+  Norvice : 
+    status:
+      str : 0
+      int : 0
+      dex : 0
+
+    preset : 
+      one : "Atack"
+
+    learned: 
+      Atack : 1
 
 class JobClass
 class Lord extends JobClass

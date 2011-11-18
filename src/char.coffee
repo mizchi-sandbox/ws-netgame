@@ -7,6 +7,7 @@ Skill = require('./skills')
 {randint} = require('./Util')
 {SkillBox} = require './skills'
 Skills = require './skills'
+{ItemBox} = require './ItemBox'
 seq = ['one','two','three','four','five','six','seven','eight','nine','zero']
 
 class Character extends Sprite
@@ -17,6 +18,7 @@ class Character extends Sprite
     @dir = 0
     @id = ~~(random() * 1000)
     @cnt = ~~(random() * 60)
+
     @items = new ItemBox
     @animation = []
     @_path = []
@@ -79,9 +81,6 @@ class Character extends Sprite
 
   select_skill: ()->
     @selected_skill = new Skill.Atack(@)
-
-  # action
-    console.log "#{@name} is damaged"
 
   onHealed : (amount)->
 
@@ -163,8 +162,7 @@ class Character extends Sprite
 
   die : (actor)->
     @cnt = 0
-    if @group is ObjectId.Enemy
-      actor.status.gold += ~~(random()*100)
+    actor.status.gold += ~~(random()*100)
     actor.status.get_exp(@status.lv*10)
     console.log "#{@name} is killed by #{actor.name}." if actor
 
@@ -237,52 +235,5 @@ class Character extends Sprite
       equipment : @equipment.toData() 
       items : @items.toData()
 
-{Status} = require './Status'
-{Equipment} = require './Equipment'
-{ItemBox} = require './ItemBox'
-racial_data = require('./racialdata').RacialData
-class_data = require('./classdata').ClassData
-{random,sqrt,min,max,sin,cos} = Math
 
-class Goblin extends Character
-  name : "Goblin"
-  constructor: (@scene , @group,lv=1) ->
-    @set_pos()
-    @race = 'Goblin'
-    # @id = ObjectId.Monster
-    @dir = 0
-
-    race = racial_data['goblin']
-    race.lv = 1
-
-    @status = new Status race,1
-    @status.trace_range = 13
-    super(@scene ,@x,@y,@group,@status)
-    @skills = new SkillBox @,{Atack:1,Heal:1},{
-      one:"Atack"
-      two:"Heal"
-    }
-    # @skills.one = new Skill.Atack(@,3)
-    # @skills.two = new Skill.Heal(@)
-    @selected_skill = @skills.sets.one
-    @equipment = new Equipment
-      main_hand : 
-        name : 'dagger'
-        drate : 0.7
-
-  select_skill: ()->
-    if @status.hp < 5
-      last = @selected_skill
-      @selected_skill = @skills.sets['two']
-    else
-      @selected_skill = @skills.sets['one']
-
-  die : (actor)->
-    super actor
-    actor.get_item new Weapons::Dagger
-
-  exec:(actor,objs)->
-    super actor,objs
-
-exports.Goblin = Goblin
 exports.Character = Character

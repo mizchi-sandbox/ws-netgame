@@ -1,6 +1,6 @@
 class Status
   constructor: (data = {}) ->
-    @lv = data.lv or 0
+    @lv = data.lv or 1
     @exp = data.exp or 0
     @gold = data.gold or 10 
 

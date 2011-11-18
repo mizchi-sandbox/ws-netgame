@@ -1,7 +1,8 @@
-{Goblin} = require('./../char')
+{Goblin} = require('./../Monster')
 {Player} = require('./../Player')
 {ObjectId} = require('./../ObjectId')
 {MoneyObject} = require('./../sprites')
+
 require './../Util'
 {pow,sqrt,abs,random,max,min} = Math
 {Stage} = require "./../stage"
@@ -9,7 +10,7 @@ require './../Util'
 class RandomStage extends Stage
   constructor: (@context) ->
     super()
-    @_map = @create_map 120,120,15
+    @_map = @create_map 60,60,7
     @max_object_count = 10
     @cnt = 0
     @players = {}
@@ -61,7 +62,7 @@ class RandomStage extends Stage
   pop_monster: () ->
     if random() < 0.9
       [rx,ry]  = @get_random_point()
-      @objects.push( gob = new Goblin(@,ObjectId.Enemy) )
+      @objects.push( gob = new Goblin(@, ~~(6*Math.random()) ,ObjectId.Enemy) )
 
       gob.set_pos rx,ry
 

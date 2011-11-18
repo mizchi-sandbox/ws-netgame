@@ -1,5 +1,4 @@
 {ObjectId} = require('./ObjectId')
-
 {Character} = require './char'
 {Status} = require './Status'
 {Equipment} = require './Equipment'

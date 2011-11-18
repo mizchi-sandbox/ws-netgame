@@ -19,6 +19,11 @@ exports.RacialData =
     int: 4
     dex: 4
 
+  hound_dog : 
+    str: 10
+    int: 4
+    dex: 12
+
   Ent : 
     str: 11
     int: 14

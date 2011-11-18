@@ -1,0 +1,14 @@
+{
+    "name": "mmorpg",
+    "version": "0.0.1",
+    "main": "./", 
+    "dependencies": {
+        "coffee-script": ">= 0.1.0",
+        "nstore":">=0.4",
+        "oauth": ">= 1.1.0",
+        "zappa": ">= 0.2"
+    },
+    "bin": [
+        {"mmo-server-start":"./server-start.js"}
+    ]
+}

@@ -24,7 +24,7 @@ div class:"container-fluid row",->
     jqtpl 'StatusInfo', ->
       $$ "{{if CharInfo()}}"
       p -> "BP:${CharInfo().status.bp}p"
-      dl ->
+      dl -> 
         for i in ['str','int','dex']
           dt -> i
           dd -> 
@@ -76,14 +76,6 @@ div class:"container-fluid row",->
         div class:'span2' ,->
           p "[${i+1}] ${ct}%"
         $$ "{{/each}}"
-
-
-        # div class:'span1' ,->
-        #   # p "[${i+1}] ${sk.data.name}.${sk.data.lv}"
-        #   p "CT:${CoolTime()[i]}%"
-        # # $$ "{{/if}}"
-        # $$ "{{/each}}"
-        #   # dd -> "${sk.data.name}:lv${sk.data.lv}"
 
     canvas id:"game",style:"float:left;background-color:black;"
 
