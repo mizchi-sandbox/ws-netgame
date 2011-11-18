@@ -5,7 +5,7 @@
     "dependencies": {
         "coffee-script": ">= 0.1.0",
         "nstore":">=0.4",
-        "oauth": ">= 1.1.0",
+        "oauth": ">= 0.9",
         "zappa": ">= 0.2"
     },
     "bin": [
