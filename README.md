@@ -9,11 +9,7 @@ GoogleChrome/Firefox4.0以上等、WebSocket対応ブラウザに対応。
 ---------
 数字キー[1, 2, 3, 4]で技選択。
 敵に近寄ると自動で発動
-## oauthのトークンとパスをsessionの秘密鍵設定してconfig.coffee  
-dasfda
-d
 ![ss](https://github.com/mizchi/ws-netgame/raw/master/public/ss2.jpg "ss")
-![ss](https://github.com/mizchi/ws-netgame/raw/master/public/ss.jpg "ss")
 
 緑が自分。青が他のプレーヤー。赤がモンスター。
 
@@ -24,9 +20,7 @@ $ npm install .
 $ mv config-sample.coffee config.coffee
 $ node server.js
 
-
 ## ChangeLog ##
-
 
 ### v.0.0.6 
 * 思い出しながらREADME書いてる
@@ -71,7 +65,8 @@ $ node server.js
 * プレーヤーネームのバリデーション
 
 ## Idea ##
-やりたいこと
+やりたいこと  
+
 * Racialに応じたスキル
 * ハイトの概念を導入
 * スキルを色(属性)で分類してマスタリを簡易化
