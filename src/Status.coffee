@@ -43,8 +43,8 @@ class Status
 
   on_status_change :->
     
-  use_skill_point:(sname)->
-    # TODO
+
+  get_exp:(point)->
 
   use_battle_point:(at)->
     if @bp>0 and at in ["str","int","dex"]

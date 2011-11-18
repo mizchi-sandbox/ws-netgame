@@ -19,28 +19,35 @@ div class:"container-fluid row",->
       h4 -> "${CharInfo().name}"
       a href : '/logout',-> "Logout"
       p -> "${CharInfo().status.class} lv.${CharInfo().status.lv} [${CharInfo().status.race}]"
-      p -> "bp:${CharInfo().status.bp} sp:${CharInfo().status.sp}"
-
-
-      dl ->
-        dt -> "STR" 
-        dd -> "${CharInfo().status.str}"
-
-        dt -> "INT"
-        dd ->"${CharInfo().status.int}"
-
-        dt -> "DEX"
-        dd -> "${CharInfo().status.dex}"
-
       $$ "{{/if}}"
 
-    p -> "BP消費で成長"
-    button bind(click:'use_battle_point',{target:'str',class:"btn small"}), -> ' str++'
-    $$ '&nbsp;'
-    button bind(click:'use_battle_point',{target:'int',class:'btn small'}) , -> ' int++'
-    $$ '&nbsp;'
-    button bind(click:'use_battle_point',{target:'dex',class:'btn small'}) , -> ' dex++'
+    jqtpl 'StatusInfo', ->
+      $$ "{{if CharInfo()}}"
+      p -> "BP:${CharInfo().status.bp}p"
+      dl ->
+        for i in ['str','int','dex']
+          dt -> i
+          dd -> 
+            span -> "${CharInfo().status.#{i}} &nbsp;"
 
+            $$ "{{if CharInfo().status.bp > 0}}"
+            button bind(click:'use_battle_point',{target:i,class:"btn small"}), ->  "+"
+            $$ "{{/if}}"
+      $$ "{{/if}}"
+
+    jqtpl 'skill-chart', ->
+      $$ "{{if CharInfo()}}"
+      p -> "SP:${CharInfo().status.sp}p"
+      dl id:"skill-list",->
+        $$ "{{each(sname,lv) CharInfo().skills.learned}}"
+        dt ->  '${sname}'
+        dd ->
+          span "${lv} &nbsp;"
+          $$ "{{if CharInfo().status.sp > 0}}"
+          button bind(click:'use_skill_point',{target:'${sname}',class:"btn small"}), -> '+'
+          $$ "{{/if}}"
+        $$ "{{/each}}"
+      $$ "{{/if}}"
 
     jqtpl 'object-status', ->
       ul id:"side-menu",->
@@ -81,17 +88,8 @@ div class:"container-fluid row",->
     canvas id:"game",style:"float:left;background-color:black;"
 
     p "画面サイズ"
-    button class:'btn',onclick:"grr.change_scale(grr.scale+1);",'sclae++'
+    button class:'btn',onclick:"grr.change_scale(grr.scale+1);",'scale++'
     button class:'btn',onclick:'grr.change_scale(grr.scale-1);','scale--'
-        # $$ "{{if CharInfo()}}"
-        # dl ->
-        #   $$ "{{each(i,sk) CharInfo().skills}}"
-        #   $$ "{{if sk.data}}"
-        #   dt -> "[key${i+1}]"+"${CoolTime()[i]}"
-        #   dd -> "${sk.data.name}:lv${sk.data.lv}"
-        #   $$ "{{/if}}"
-        #   $$ "{{/each}}"
-        # $$ "{{/if}}"
 
 coffeescript ->
   canvas =  document.getElementById "game"

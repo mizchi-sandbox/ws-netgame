@@ -266,12 +266,15 @@ class SkillBox
   build : (preset)->
     for key,skill_name of preset
       @set_key key, skill_name
-      # lv = @learned[skill_name]
-      # @sets[key] = new exports[skill_name](@actor,lv)
 
-    # for i in data
-    #   if i.data 
-    #     @[i.key] = new exports[i.data.name](actor, i.data.lv)
+  use_skill_point:(sname)->
+    if @actor.status.sp>0 and @learned[sname]?
+      @learned[sname] +=1
+      @actor.status.sp--
+      @build()
+      true
+    else
+      false
 
   toData:->
     learned : @learned

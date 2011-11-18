@@ -88,9 +88,14 @@ require('zappa') config.port, ->
       ObjectInfo : ko.observable []
       CharInfo : ko.observable null
       CoolTime : ko.observable []
+
       use_battle_point: (e)->
         at = $(e.target).attr('target')
         soc.emit 'use_battle_point', at:at
+
+      use_skill_point: (e)->
+        at = $(e.target).attr('target')
+        soc.emit 'use_skill_point', at:at
 
   save = (char,fn=->)->
     return fn(true,null) unless char?.name
@@ -182,6 +187,11 @@ require('zappa') config.port, ->
 
   @on use_battle_point: ->
     game.stages.f1.players[@id]?.status.use_battle_point(@data.at)
+    save game.stages.f1.players[@id],->d 'save done'
+    @emit 'update_char', game.stages.f1.players[@id]?.toData()
+
+  @on use_skill_point: ->
+    game.stages.f1.players[@id]?.skills.use_skill_point(@data.at)
     save game.stages.f1.players[@id],->d 'save done'
     @emit 'update_char', game.stages.f1.players[@id]?.toData()
 
