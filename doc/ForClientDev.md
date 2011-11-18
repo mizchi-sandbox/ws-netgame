@@ -19,7 +19,9 @@ HightMap , CollitionMap , ObjectMap の3つに分割することを検討中。(
 毎秒15回(通信品質に依存)
 ステージの更新を受け取る。パケットが多いので、可能な限りシリアライズする。
 
-objsは以下のArray
+objsは以下のArray  
+
+
 ~~~~~
 [
   {
