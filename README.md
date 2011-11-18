@@ -16,9 +16,9 @@ GoogleChrome/Firefox4.0以上等、WebSocket対応ブラウザに対応。
 ## Installing ##
 $ git clone git://github.com/mizchi/ws-netgame.git  
 $ cd ws-netgame  
-$ npm install .
-$ mv config-sample.coffee config.coffee
-$ node server.js
+$ npm install .  
+$ mv config-sample.coffee config.coffee  
+$ node server.js  
 
 ## ChangeLog ##
 
