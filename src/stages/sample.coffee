@@ -19,20 +19,20 @@ class RandomStage extends Stage
   get_objs:->
     (v for _,v of @players).concat(@objects)
 
-  join : (id,name,data={},emitter)->
+  join : (id,name,data={},__socket)->
     @context.start() unless @context.active
     p = @players[id] = new Player(@,data)
-    p.__emitter = emitter
+    p.__socket = __socket
 
-    # レベルアップ/ステータス変更時にアップデートするコールバック関数
     p.status.on_status_change = ->
-      emitter 'update_char', p.toData()
+      p.__socket.emit 'update_char',p.toData()
 
     [rx,ry]  = @get_random_point()
     p.set_pos rx,ry
 
     p.id = id
     p.name = name if name?
+    return p
 
   leave : (id)->
     delete @players[id]
@@ -56,7 +56,7 @@ class RandomStage extends Stage
       if p.is_dead() and p.cnt > 60
         console.log 'dead:',p.id,p.name
         console.log  p.toData()
-        @join p.id,p.name, p.toData(),p.__emitter
+        @join p.id,p.name, p.toData(),p.__socket
 
 
   pop_monster: () ->

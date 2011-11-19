@@ -1,7 +1,6 @@
 {Game} = require './src/core'
 game = new Game
 game.start()
-
 config = require './config'
 nstore = require('nstore')
 Users = nstore.new("savedata.db")
@@ -9,6 +8,7 @@ Users = nstore.new("savedata.db")
 util = require './src/Util'
 
 require('zappa') config.port, ->
+  f1 = @io.of("/f1")
   @io.configure =>
     @io.set( "log level", 1 )
     # @io.set "authorization", (handshakeData, callback) ->
@@ -17,6 +17,9 @@ require('zappa') config.port, ->
     #   console.log cookie
     #   callback(null, true)
 
+
+# 揮発性メッセージ
+#socket.volatile.emit('volatile msg', ++i);
 
   @app.use @express.bodyParser()
   @app.use @express.methodOverride()
@@ -57,7 +60,6 @@ require('zappa') config.port, ->
         when 57 then return 'nine'
       return String.fromCharCode(keyCode).toLowerCase()
 
-  game.sockets = @io.sockets
   # Rooting
   @get '/logout': ->
     @session.destroy ()=>
@@ -68,13 +70,13 @@ require('zappa') config.port, ->
 
   @get '/': ->
     console.log @session.name
-    # @session.name = "mizchi"  # for debug
+    # @session.name = "test"  # for debug
     if @session.name
       @render index:
         id : @session.name
     else
       @render login:{layout:false}
-      
+
   @post '/register': ->
     console.log 'create account', @body
     name = @body.name
@@ -125,11 +127,11 @@ require('zappa') config.port, ->
 
       use_battle_point: (e)->
         at = $(e.target).attr('target')
-        soc.emit 'use_battle_point', at:at
+        socket.emit 'use_battle_point', at:at
 
       use_skill_point: (e)->
         at = $(e.target).attr('target')
-        soc.emit 'use_skill_point', at:at
+        socket.emit 'use_skill_point', at:at
 
   save = (char,fn=->)->
     return fn(true,null) unless char?.name
@@ -160,7 +162,8 @@ require('zappa') config.port, ->
         ])
       a:[]
 
-    @io.sockets.emit 'update',
+    # ネームスペースにブロードキャスト
+    f1.emit 'update',
       objs: ret
 
     for id,player of game.stages.f1.players
@@ -176,77 +179,96 @@ require('zappa') config.port, ->
 
   # ==== clinet wewbsocket ====
   @client '/index.js': ->
-    window.soc = @connect()
+    window.socket = @connect("http://localhost:4444/f1")
+    socket.on 'connection',(data)->
+      console.log "on return connection!"
+      grr.create_map data.map
+      grr.uid = data.uid
 
-    @on connection: ->
-      grr.map = @data.map
-      grr.create_map @data.map
-      grr.uid = @data.uid
+    socket.on 'update',(data)->
+      view.ObjectInfo data.objs
+      grr.render data
 
-    @on update: ->
-      view.ObjectInfo @data.objs
-      grr.render @data
+    socket.on 'update_ct',(data)->
+      view.ObjectInfo data.objs
+      view.CoolTime data.cooltime
 
-    @on update_ct: ->
-      view.CoolTime @data.cooltime
-
-    @on update_char: ->
-      view.CharInfo @data
+    socket.on 'update_char' ,(data)->
+      view.CharInfo data
 
   # ==== server wewbsocket ====
+  floor = 'f1'
 
-  @on connection: ->
-    d "Connected: #{@id}"
-    @emit 'connection',map:game.stages.f1._map,uid:@id
 
-  @on disconnect: ->
-    d "Disconnected: #{@id}"
-    char = game.stages.f1.players[@id]
-    save char,=>
-      game.stages.f1.leave(@id)
+  f1.on "connection" ,(soc)->
+    id = soc.id 
+    d "Connected: #{id}"
 
-  @on keydown: ->
-    game.stages.f1.players[@id]?.keys[@data.code] = 1
+    player = null
+    stage = game.stages[floor]
 
-  @on keyup: ->
-    game.stages.f1.players[@id]?.keys[@data.code] = 0
+    soc.emit 'connection',
+      map:stage._map
+      uid:id
 
-  @on click_map: ->
-    console.log @data.x , @data.y
-    game.stages.f1.players[@id]?._wait = 0
-    game.stages.f1.players[@id]?.destination =
-      x:@data.x
-      y:@data.y
+    # login and logout
+    soc.on 'login',(data)->
+      name = data.name
+      Users.get name, (e,savedata)=>
+        player = stage.join id,name,savedata , soc
+        soc.emit 'update_char',player.toData()
 
-  @on use_battle_point: ->
-    game.stages.f1.players[@id]?.status.use_battle_point(@data.at)
-    save game.stages.f1.players[@id],->d 'save done'
-    @emit 'update_char', game.stages.f1.players[@id]?.toData()
+    soc.on "disconnect" ,(data)->
+      d "Disconnected: #{id}"
+      save player,=>
+        stage.leave(id)
 
-  @on use_skill_point: ->
-    game.stages.f1.players[@id]?.skills.use_skill_point(@data.at)
-    save game.stages.f1.players[@id],->d 'save done'
-    @emit 'update_char', game.stages.f1.players[@id]?.toData()
+    # player action
+    soc.on "keydown" ,(data)->
+      player?.keys[data.code] = 1
 
-  _io = @io
-  @on login: ->
-    name = @data.name
-    Users.get name, (e,savedata)=>
-      # if savedata
-      if savedata
-        d "[load] #{@data.name}"
-        d savedata
-        # game.stages.f1.join(@id,name,savedata)
+    soc.on "keyup" ,(data)->
+      player?.keys[data.code] = 0
 
-      else
-        savedata = create_new(name,'human','Lord')
-        d "[create] #{@data.name}"
-        Users.save name , savedata,(e)->
-          console.log e if e
+    soc.on "click_map" ,(data)->
+      player?._wait = 0
+      player?.destination =
+        x:data.x
+        y:data.y
 
-      # soc = _io.sockets.socket(id)
-      game.stages.f1.join @id,name,savedata,@emit
-      @emit 'update_char', savedata
+    soc.on "click_map" ,(data)->
+      player?.status.use_battle_point( data.at)
+      save player,->d 'save done'
+      soc.emit 'update_char',  player?.toData()
+
+    soc.on "use_battle_point" ,(data)->
+      player?.status.use_battle_point(data.at)
+      save player,->d 'save done'
+      soc.emit 'update_char',  player?.toData()
+
+    soc.on "use_skill_point", (data)->
+      player?.skills.use_skill_point(data.at)
+      save player,->d 'save done'
+      soc.emit 'update_char' , player?.toData()
+
+  # f1.on "login" ,(soc)->
+  #   name = @data.name
+  #   Users.get name, (e,savedata)=>
+  #     # if savedata
+  #     if savedata
+  #       d "[load] #{@data.name}"
+  #       d savedata
+  #       # game.stages.f1.join(@id,name,savedata)
+
+  #     else
+  #       savedata = create_new(name,'human','Lord')
+  #       d "[create] #{@data.name}"
+  #       Users.save name , savedata,(e)->
+  #         console.log e if e
+
+  #     # soc = _io.sockets.socket(id)
+  #     game.stages.f1.join @id,name,savedata,@emit
+      # @emit 'update_char', savedata
 
   setInterval ->
     d "inteval save"
