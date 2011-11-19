@@ -1,6 +1,4 @@
 {Game} = require './src/core'
-game = new Game
-game.start()
 config = require './config'
 nstore = require('nstore')
 Users = nstore.new("savedata.db")
@@ -8,7 +6,7 @@ Users = nstore.new("savedata.db")
 util = require './src/Util'
 
 require('zappa') config.port, ->
-  f1 = @io.of("/f1")
+
   @io.configure =>
     @io.set( "log level", 1 )
     # @io.set "authorization", (handshakeData, callback) ->
@@ -17,9 +15,11 @@ require('zappa') config.port, ->
     #   console.log cookie
     #   callback(null, true)
 
-
-# 揮発性メッセージ
-#socket.volatile.emit('volatile msg', ++i);
+  dungeon_depth = 3
+  floors  = []
+  floors[i] = @io.of('/f'+i) for i in [0...dungeon_depth]
+  game = new Game {},dungeon_depth
+  game.start()
 
   @app.use @express.bodyParser()
   @app.use @express.methodOverride()
@@ -110,8 +110,6 @@ require('zappa') config.port, ->
       else 
         @send 'no such a user'
 
-
-
   twoauth = require('./twitter_oauth')
   @get '/verify' : ->
     twoauth.verify @request,@response,(token,token_secret,results)=>
@@ -144,38 +142,42 @@ require('zappa') config.port, ->
 
   # emitter for client
   game.ws = =>
-    objs = game.stages.f1.objects.concat (v for k,v of game.stages.f1.players)
-
     fix = (n)-> ~~(100*n)/100
-    ret = objs.map (i)->
-      o:[
-        fix(i.x)
-        fix(i.y)
-        i.id
-        i.group]
-      s:
-        n : i.name
-        hp :~~(100*i.status.hp/i.status.HP)
-        lv: i.status.lv
-      t:(unless i.target then null else [
-          fix(i.target.x),fix(i.target.y),i.target.id, i.target.group
-        ])
-      a:[]
+    for n , stage of game.stages
+      len = ('' for k,v of stage.players).length
+      if len > 0
+        objs = stage.objects.concat (v for k,v of stage.players)
+        ret = objs.map (i)->
+          o:[
+            fix(i.x)
+            fix(i.y)
+            i.id
+            i.group]
+          s:
+            n : i.name
+            hp :~~(100*i.status.hp/i.status.HP)
+            lv: i.status.lv
+          t:(unless i.target then null else [
+              fix(i.target.x),fix(i.target.y),i.target.id, i.target.group
+            ])
+          a:[]
 
-    # ネームスペースにブロードキャスト
-    f1.emit 'update',
-      objs: ret
+        # ネームスペースにブロードキャスト
+       # socket.volatile.emit('volatile msg', ++i); 
+        # f1.emit 'update',
+        floors[n].emit 'update',
+          objs: ret
 
-    for id,player of game.stages.f1.players
-      seq = ['one','two','three','four','five','six','seven','eight','nine','zero']
-      buff = []
-      for i in seq 
-        if s = player.skills.sets[i]
-          buff.push ~~(100*s.ct/s.CT)
-      @io.sockets.socket(id).emit 'update_ct',cooltime:buff
+        for id,player of stage.players
+          seq = ['one','two','three','four','five','six','seven','eight','nine','zero']
+          buff = []
+          for i in seq 
+            if s = player.skills.sets[i]
+              buff.push ~~(100*s.ct/s.CT)
+          # @io.sockets.socket(id).emit 'update_ct',cooltime:buff
 
-      if game.cnt%(15*120) is 0
-        @io.sockets.socket(id).emit 'update_char',player.toData()
+          if game.cnt%(15*120) is 0
+            @io.sockets.socket(id).emit 'update_char',player.toData()
 
   # ==== clinet wewbsocket ====
   @client '/index.js': ->
@@ -197,15 +199,18 @@ require('zappa') config.port, ->
       view.CharInfo data
 
   # ==== server wewbsocket ====
-  floor = 'f1'
+  # floor = 'f1'
 
-
-  f1.on "connection" ,(soc)->
+  fnum = 1
+  # for fnum in [0...dungeon_depth]
+  # if game.stages[fnum] then continue
+  floor = floors[fnum]
+  floor.on "connection" ,(soc)->
     id = soc.id 
     d "Connected: #{id}"
 
     player = null
-    stage = game.stages[floor]
+    stage = game.stages[fnum]
 
     soc.emit 'connection',
       map:stage._map
@@ -251,29 +256,9 @@ require('zappa') config.port, ->
       save player,->d 'save done'
       soc.emit 'update_char' , player?.toData()
 
-  # f1.on "login" ,(soc)->
-  #   name = @data.name
-  #   Users.get name, (e,savedata)=>
-  #     # if savedata
-  #     if savedata
-  #       d "[load] #{@data.name}"
-  #       d savedata
-  #       # game.stages.f1.join(@id,name,savedata)
 
-  #     else
-  #       savedata = create_new(name,'human','Lord')
-  #       d "[create] #{@data.name}"
-  #       Users.save name , savedata,(e)->
-  #         console.log e if e
-
-  #     # soc = _io.sockets.socket(id)
-  #     game.stages.f1.join @id,name,savedata,@emit
-      # @emit 'update_char', savedata
-
-  setInterval ->
-    d "inteval save"
-    for k,v of game.stages.f1.players
-      save v,=>
-  ,1000*60*15
+  # setInterval -> d "inteval save"for k,v of game.stages.f1.players
+  #     save v,=>
+  # ,1000*60*15
 
 

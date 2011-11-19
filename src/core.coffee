@@ -1,11 +1,12 @@
 {RandomStage} = require('./stages/sample')
 
 class Game
-  constructor: (conf) ->
+  constructor: (conf,depth) ->
     console.log("GameEngine created...")
-    @stages =
-      f1: new RandomStage(@,32)
-      f2: new RandomStage(@,32)
+
+    @stages = {}
+    @stages[i] = new RandomStage(@,32) for i in [0...depth]
+    console.log @stages
     @cnt = 0
     @active = true
     @fps = 15
