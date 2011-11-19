@@ -16,8 +16,7 @@ require('zappa') config.port, ->
     #   callback(null, true)
 
   dungeon_depth = 3
-  floors  = []
-  floors[i] = @io.of('/f'+i) for i in [0...dungeon_depth]
+  floors = (@io.of('/f'+i) for i in [0...dungeon_depth])
   game = new Game {},dungeon_depth
   game.start()
 
@@ -110,12 +109,22 @@ require('zappa') config.port, ->
       else 
         @send 'no such a user'
 
+  # twitter login
   twoauth = require('./twitter_oauth')
   @get '/verify' : ->
     twoauth.verify @request,@response,(token,token_secret,results)=>
       @session.name = results.screen_name
       console.log "[login] #{results.screen_name}"
       @redirect '/'
+
+
+  save = (char,fn=->)->
+    return fn(true,null) unless char?.name
+    Users.get char.name, (e,item)->
+      console.log "save : ", char.name
+      Users.save char.name , char.toData() ,(e)->
+        if e
+          console.log e
 
   @client '/bootstrap.js': ->
     window.view =
@@ -131,21 +140,16 @@ require('zappa') config.port, ->
         at = $(e.target).attr('target')
         socket.emit 'use_skill_point', at:at
 
-  save = (char,fn=->)->
-    return fn(true,null) unless char?.name
-    Users.get char.name, (e,item)->
-      console.log "save : ", char.name
-      Users.save char.name , char.toData() ,(e)->
-        if e
-          console.log e
-        fn()
-
   # emitter for client
   game.ws = =>
     fix = (n)-> ~~(100*n)/100
-    for n , stage of game.stages
-      len = ('' for k,v of stage.players).length
-      if len > 0
+    # for n , stage of game.stages
+    n = 0
+    for stage in game.stages
+      pnames = (v.name for k,v of stage.players)
+      console.log n,pnames, pnames.length
+      # if pnames.length
+      if true
         objs = stage.objects.concat (v for k,v of stage.players)
         ret = objs.map (i)->
           o:[
@@ -161,29 +165,27 @@ require('zappa') config.port, ->
               fix(i.target.x),fix(i.target.y),i.target.id, i.target.group
             ])
           a:[]
-
-        # ネームスペースにブロードキャスト
-       # socket.volatile.emit('volatile msg', ++i); 
-        # f1.emit 'update',
         floors[n].emit 'update',
           objs: ret
+        # floors[0].emit 'update',
+      n++
 
-        for id,player of stage.players
-          seq = ['one','two','three','four','five','six','seven','eight','nine','zero']
-          buff = []
-          for i in seq 
-            if s = player.skills.sets[i]
-              buff.push ~~(100*s.ct/s.CT)
-          # @io.sockets.socket(id).emit 'update_ct',cooltime:buff
+        # for id,player of stage.players
+        #   seq = ['one','two','three','four','five','six','seven','eight','nine','zero']
+        #   buff = []
+        #   for i in seq 
+        #     if s = player.skills.sets[i]
+        #       buff.push ~~(100*s.ct/s.CT)
+        #   # @io.sockets.socket(id).emit 'update_ct',cooltime:buff
 
-          if game.cnt%(15*120) is 0
-            @io.sockets.socket(id).emit 'update_char',player.toData()
+        #   if game.cnt%(15*120) is 0
+        #     @io.sockets.socket(id).emit 'update_char',player.toData()
 
   # ==== clinet wewbsocket ====
   @client '/index.js': ->
-    window.socket = @connect("http://localhost:4444/f1")
+    fid = 1
+    window.socket = @connect("http://localhost:4444/f"+fid)
     socket.on 'connection',(data)->
-      console.log "on return connection!"
       grr.create_map data.map
       grr.uid = data.uid
 
@@ -199,66 +201,59 @@ require('zappa') config.port, ->
       view.CharInfo data
 
   # ==== server wewbsocket ====
-  # floor = 'f1'
-
   fnum = 1
-  # for fnum in [0...dungeon_depth]
-  # if game.stages[fnum] then continue
-  floor = floors[fnum]
-  floor.on "connection" ,(soc)->
-    id = soc.id 
-    d "Connected: #{id}"
+  fnum = -1
+  for fr in floors 
+    fnum++
+    fr.on "connection" ,(soc)->
+        id = soc.id 
+      d "Connected: #{id}"
 
-    player = null
-    stage = game.stages[fnum]
+      player = null
+      stage = game.stages[fnum]
 
-    soc.emit 'connection',
-      map:stage._map
-      uid:id
+      soc.emit 'connection',
+        map:stage._map
+        uid:id
 
-    # login and logout
-    soc.on 'login',(data)->
-      name = data.name
-      Users.get name, (e,savedata)=>
-        player = stage.join id,name,savedata , soc
-        soc.emit 'update_char',player.toData()
+      # login and logout
+      soc.on 'login',(data)->
+        name = data.name
+        Users.get name, (e,savedata)=>
+          player = stage.join id,name,savedata , soc
+          soc.emit 'update_char',player.toData()
 
-    soc.on "disconnect" ,(data)->
-      d "Disconnected: #{id}"
-      save player,=>
-        stage.leave(id)
+      soc.on "disconnect" ,(data)->
+        d "Disconnected: #{id}"
+        save player,=>
+          stage.leave(id)
 
-    # player action
-    soc.on "keydown" ,(data)->
-      player?.keys[data.code] = 1
+      # player action
+      soc.on "keydown" ,(data)->
+        player?.keys[data.code] = 1
 
-    soc.on "keyup" ,(data)->
-      player?.keys[data.code] = 0
+      soc.on "keyup" ,(data)->
+        player?.keys[data.code] = 0
 
-    soc.on "click_map" ,(data)->
-      player?._wait = 0
-      player?.destination =
-        x:data.x
-        y:data.y
+      soc.on "click_map" ,(data)->
+        player?._wait = 0
+        player?.destination =
+          x:data.x
+          y:data.y
 
-    soc.on "click_map" ,(data)->
-      player?.status.use_battle_point( data.at)
-      save player,->d 'save done'
-      soc.emit 'update_char',  player?.toData()
+      soc.on "click_map" ,(data)->
+        player?.status.use_battle_point( data.at)
+        save player,->d 'save done'
+        soc.emit 'update_char',  player?.toData()
 
-    soc.on "use_battle_point" ,(data)->
-      player?.status.use_battle_point(data.at)
-      save player,->d 'save done'
-      soc.emit 'update_char',  player?.toData()
+      soc.on "use_battle_point" ,(data)->
+        player?.status.use_battle_point(data.at)
+        save player,->d 'save done'
+        soc.emit 'update_char',  player?.toData()
 
-    soc.on "use_skill_point", (data)->
-      player?.skills.use_skill_point(data.at)
-      save player,->d 'save done'
-      soc.emit 'update_char' , player?.toData()
-
-
-  # setInterval -> d "inteval save"for k,v of game.stages.f1.players
-  #     save v,=>
-  # ,1000*60*15
+      soc.on "use_skill_point", (data)->
+        player?.skills.use_skill_point(data.at)
+  #       save player,->d 'save done'
+        soc.emit 'update_char' , player?.toData()
 
 

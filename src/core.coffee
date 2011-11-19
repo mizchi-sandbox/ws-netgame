@@ -4,7 +4,7 @@ class Game
   constructor: (conf,depth) ->
     console.log("GameEngine created...")
 
-    @stages = {}
+    @stages = []
     @stages[i] = new RandomStage(@,32) for i in [0...depth]
     console.log @stages
     @cnt = 0

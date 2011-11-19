@@ -2,19 +2,78 @@
 {Player} = require('./../Player')
 {ObjectId} = require('./../ObjectId')
 {MoneyObject} = require('./../sprites')
-
-require './../Util'
 {pow,sqrt,abs,random,max,min} = Math
 {Stage} = require "./../stage"
 
+nstore = require('nstore')
+Users = nstore.new("savedata.db")
+save = (char,fn=->)->
+  return fn(true,null) unless char?.name
+  Users.get char.name, (e,item)->
+    console.log "save : ", char.name
+    Users.save char.name , char.toData() ,(e)->
+      if e
+        console.log e
+        
 class RandomStage extends Stage
-  constructor: (@context) ->
+  constructor: (@context,socket) ->
     super()
     @_map = @create_map 60,60,7
     @max_object_count = 10
     @cnt = 0
     @players = {}
     @objects = []
+
+    # for ns
+    socket.on "connection" ,(soc)=>
+      id = socket.id 
+      player = null
+
+      socket.emit 'connection',
+        map:stage._map
+        uid:id
+
+      # login and logout
+      socket.on 'login',(data)=>
+        name = data.name
+        Users.get name, (e,savedata)=>
+          player = @join id,name,savedata, soc
+          socket.emit 'update_char',player.toData()
+
+      socket.on "disconnect" ,(data)=>
+        d "Disconnected: #{id}"
+        save player,=>
+          @leave(id)
+
+      # player action
+      socket.on "keydown" ,(data)->
+        player?.keys[data.code] = 1
+
+      socket.on "keyup" ,(data)->
+        player?.keys[data.code] = 0
+
+      socket.on "click_map" ,(data)->
+        player?._wait = 0
+        player?.destination =
+          x:data.x
+          y:data.y
+
+      socket.on "click_map" ,(data)->
+        player?.status.use_battle_point( data.at)
+        save player,->d 'save done'
+        socket.emit 'update_char',  player?.toData()
+
+      socket.on "use_battle_point" ,(data)->
+        player?.status.use_battle_point(data.at)
+        save player,->d 'save done'
+        socket.emit 'update_char',  player?.toData()
+
+      socket.on "use_skill_point", (data)->
+        player?.skills.use_skill_point(data.at)
+        save player,->d 'save done'
+        socket.emit 'update_char' , player?.toData()
+
+
 
   get_objs:->
     (v for _,v of @players).concat(@objects)

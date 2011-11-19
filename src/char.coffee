@@ -71,12 +71,12 @@ class Character extends Sprite
         console.log "#{@name} lost track of #{@target.name}"
         @target = null
     else if enemies.length is 1
-      @target = enemies.first()
+      @target = enemies[0]
       console.log "#{@name} find #{@target.name}"
     else if enemies.length > 1
       enemies.sort (a,b)=>
         @get_distance(a) - @get_distance(b)
-      @target = enemies.first()
+      @target = enemies[0]
       console.log "#{@name} find #{@target.name}"
 
   select_skill: ()->
