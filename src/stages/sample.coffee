@@ -9,7 +9,8 @@ class RandomStage extends Stage
   constructor: (@context,ns_socket,@db) ->
     @ns_socket = ns_socket
     super()
-    @_map = @create_map 60,60,7
+    root = @create_tworoom 60,60,5
+    @_map = root.cmap
     @max_object_count = 10
     @cnt = 0
     @players = {}

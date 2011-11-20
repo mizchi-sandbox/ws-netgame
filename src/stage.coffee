@@ -3,17 +3,112 @@
 {ObjectId} = require('./ObjectId')
 {Sprite,MoneyObject} = require('./sprites')
 # require './Util'
+_u = require 'underscore'
 
+dig = (map,fx,fy,tx,ty)->
+  while abs(tx-fx) + abs(ty-fy) >0
+    if fx>tx then fx--
+    else if fx<tx then fx++
+    else if fy>ty then fy--
+    else if fy<ty then fy++
+    map[fx][fy] = 0
+
+# 初期化
+blank = (x,y)->
+  ( (1 for m in [1..y]) for n in [1..x] )
+
+# 部屋を2つずつに分割していくパターン
+# 部屋のサイズが綺麗に調整できる
+
+class TwoRoom
+  cmap : null
+  seeds : null
+  constructor:(@prev,@depth, @ax,@ay)->
+    @c = []
+    if @depth > 0
+      @split()
+    else
+      cx = ~~((@ax[0]+@ax[1])/2)
+      cy = ~~((@ay[0]+@ay[1])/2)
+      @draw_area()
+      @seeds.push [cx,cy]
+
+    max_size = 25
+    min_size = 7
+    r = ~~(max_size/2)
+    if @ax[1]-@ax[0] < max_size
+      @rx = @ax
+    else
+      cx = ~~((@ax[0]+@ax[1])/2)
+      @rx = [cx-r, cx+r]
+    if @ay[1]-@ay[0] < 13
+      @ry = @ay
+    else
+      cy = ~~((@ay[0]+@ay[1])/2)
+      @ry = [cy-r, cy+r]
+
+    [sx,ex] = @rx
+    [sy,ey] = @ry
+
+  _v : ->
+    [sx , ex] = @ax
+    cx = ~~((sx+ex)/2)
+    @c = [
+      new TwoRoom @,--@depth, [sx,cx],@ay
+      new TwoRoom @,--@depth, [cx,ex],@ay
+    ]
+  _s : ->
+    [sy , ey] = @ay
+    cy = ~~((sy+ey)/2)
+    @c = [
+      new TwoRoom @,--@depth, @ax , [sy,cy]
+      new TwoRoom @,--@depth, @ax , [cy,ey]
+    ]
+
+  split:->
+    svrate = (@ax[1]-@ax[0]) / (@ay[1]-@ay[0])
+    # 分割時に縦横比率が0.25~4 に収まるように調整
+    if svrate > 4
+      @_v()
+    else if svrate < 0.25
+      @_s()
+    # 収まってる時はランダムに分割する
+    else if Math.random() > 0.5
+      @_s()
+    else
+      @_v()
+
+  draw_area : ->
+    [sx,ex] = @ax
+    [sy,ey] = @ay
+
+
+    for i in [sx ... ex]
+      for j in [sy ... ey]
+        if (i == sx or i == (ex-1) ) or (j == sy or j == (ey-1))
+          @cmap[i][j] = 1
+        else
+          @cmap[i][j] = 0
+
+
+
+# Room 親子関係で道をつないでいくパターン
 class Room
-  constructor:(@map,@depth, @ax,@ay)->
+  cmap : null
+  hmap : null
+  constructor:(@prev, @depth, @ax,@ay)->
+    if @ax[1] > @cmap.length 
+      console.log @ax 
+
+    if @ay[1] > @cmap[0].length 
+      console.log @ay
+    @height = ~~(random()*10)
     @max_size = 4
     @next = null
     if @depth > 0
       @next = @split()
 
-    # @rx = @ax
-    # @ry = @ay
-    max_size = 21
+    max_size = 99
     r = ~~(max_size/2)
     if @ax[1]-@ax[0] < max_size
       @rx = @ax
@@ -37,13 +132,13 @@ class Room
     [sx,ex] = @ax
     cx = ~~((ex-sx)*(1-random()/@depth)+sx)
     @ax = [cx,ex]
-    new Room @map,--@depth, [sx,cx ],@ay
+    @next = new Room @ , --@depth, [sx,cx ],@ay
 
   _s : ->
     [sy , ey] = @ay
     cy = ~~( (ey-sy)*(1-random()/@depth)+sy  )
     @ay = [cy,ey]
-    new Room @map,--@depth, @ax , [sy,cy]
+    @next = new Room @, --@depth, @ax , [sy,cy]
 
   split:->
     if Math.random() > 0.5
@@ -57,9 +152,10 @@ class Room
     for i in [sx ... ex]
       for j in [sy ... ey]
         if (i == sx or i == (ex-1) ) or (j == sy or j == (ey-1))
-          @map[i][j] = 1
+          @cmap[i][j] = 1
         else
-          @map[i][j] = 0
+          @cmap[i][j] = 0
+          @hmap[i][j] = @height
 
   draw_path : ->
     if @next
@@ -70,14 +166,13 @@ class Room
         else if cx<nx then cx++
         else if cy>ny then cy--
         else if cy<ny then cy++
-        @map[cx][cy] = 0
+        @cmap[cx][cy] = 0
       @next.draw_path()
 
 class StageLoader 
   constructor: () ->
     super 0, 0
-    @_map = @blank(30,30) #@load(maps.debug)
-    @_map = new Room(10,10)
+    @_map = blank(30,30,1) #@load(maps.debug)
 
 
   _rotate90:(map)->
@@ -107,11 +202,10 @@ class StageLoader
     map = @_set_wall(map)
     return map
 
-
 class Stage extends Sprite
   constructor: () ->
     super 0, 0
-    @_map = @blank(30,30) #@load(maps.debug)
+    @_map = blank(30,30) #@load(maps.debug)
 
 
   get_point: (x,y)->
@@ -126,20 +220,6 @@ class Stage extends Sprite
 
   collide: (x,y)->
     return @_map[~~(x)][~~(y)]
-
-
-  blank : (x,y)->
-    map = []
-    for i in [0 ... x]
-      map[i] = []
-      for j in [0 ... y]
-        map[i][j] = 1
-    return map
-
-  create_map : (x,y,depth)->
-    root = new Room(@blank(x,y),depth ,[1,x-1],[1,y-1])
-    root.draw_path()
-    root.map
 
 
   find:(arr,pos)->
@@ -218,6 +298,61 @@ class Stage extends Sprite
             n.parent = min_node
             open_list.push(n)
     return []
+
+  create_map : (x,y,depth)->
+    Room::cmap = blank(x,y)
+    Room::hmap = blank(x,y)
+    Room::search_path = @search_path
+    root = new Room(null, depth ,[1,x-1],[1,y-1])
+    root.draw_path()
+    root
+    
+
+  create_tworoom : (x,y,depth)->
+    TwoRoom::cmap = blank(x,y)
+    TwoRoom::hmap = blank(x,y)
+    TwoRoom::seeds = []
+    TwoRoom::search_path = @search_path
+    root = new TwoRoom(null, depth ,[1,x-1],[1,y-1])
+
+    # 最短ノードのネットワークを作成する
+    seeds = TwoRoom::seeds
+    to = seeds.shift() 
+    path =[to]
+    while seeds.length > 1
+      [fx,fy] = to
+      seeds = _u.reject seeds, (i)->
+        _u.isEqual i,to
+      to = null
+      min_cost = pow(x,2) + pow(y,2)
+
+      for [tx,ty] in seeds
+        cost = pow(tx-fx,2) + pow(ty-fy,2)
+        if cost < min_cost 
+          min_cost = cost
+          to = [tx,ty]
+      path.push to
+      console.log [fx,fy] , 'to', to ,min_cost
+
+    # ノード間を中折れ一回でつなげる
+    [fx,fy] = path.shift()
+    while path.length > 0
+      [nx,ny] = path.shift()
+      [cx,cy] = [
+        ~~((fx+nx)/2),
+        ~~((fy+ny)/2) ]
+
+      if abs(fx-nx) > abs(fy-ny)
+        dig root.cmap , fx,fy,cx,fy
+        dig root.cmap , cx,fy,cx,ny
+        dig root.cmap , cx,ny,nx,ny
+      else 
+        dig root.cmap , fx,fy,fx,cy
+        dig root.cmap , fx,cy,nx,cy
+        dig root.cmap , nx,cy,nx,ny
+
+      [fx,fy] = [nx,ny]
+    root
 
 exports.Stage = Stage
 
