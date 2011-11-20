@@ -23,8 +23,7 @@ class Player extends Character
     super(@scene,@x,@y,@group)
     @status = new Status data.status
     @equipment = new Equipment data.equipment
-
-
+    
     @skills = new SkillBox @, data.skills.learned, data.skills.preset
 
     @selected_skill = @skills.sets.one
@@ -112,7 +111,7 @@ exports.create_new = (name,racial_name,cls_name)->
 
   status  = new Status _status
   status.race = racial_name
-  status.class = cls_name
+  # status.class = cls_name
   status.gold = 0
   status.exp = 0
   status.lv = 1

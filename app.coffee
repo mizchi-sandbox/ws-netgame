@@ -17,7 +17,7 @@ require('zappa') config.port, ->
 
   dungeon_depth = 3
   floors = (@io.of('/f'+i) for i in [0...dungeon_depth])
-  game = new Game {},dungeon_depth
+  game = new Game {},dungeon_depth,@io,Users
   game.start()
 
   @app.use @express.bodyParser()
@@ -36,8 +36,7 @@ require('zappa') config.port, ->
 
   @shared "/shared.js":->
     r = window ? global
-    r.d = (e)->
-      console.log e
+    r.d = -> console.log arguments
 
     r.getkey = (keyCode) ->
       switch keyCode
@@ -142,31 +141,30 @@ require('zappa') config.port, ->
 
   # emitter for client
   game.ws = =>
-    fix = (n)-> ~~(100*n)/100
     # for n , stage of game.stages
     n = 0
     for stage in game.stages
       pnames = (v.name for k,v of stage.players)
-      console.log n,pnames, pnames.length
-      # if pnames.length
-      if true
-        objs = stage.objects.concat (v for k,v of stage.players)
-        ret = objs.map (i)->
-          o:[
-            fix(i.x)
-            fix(i.y)
-            i.id
-            i.group]
-          s:
-            n : i.name
-            hp :~~(100*i.status.hp/i.status.HP)
-            lv: i.status.lv
-          t:(unless i.target then null else [
-              fix(i.target.x),fix(i.target.y),i.target.id, i.target.group
-            ])
-          a:[]
-        floors[n].emit 'update',
-          objs: ret
+      if pnames.length
+        console.log n,pnames, pnames.length
+        stage.emit()
+        # objs = stage.objects.concat (v for k,v of stage.players)
+        # ret = objs.map (i)->
+        #   o:[
+        #     fix(i.x)
+        #     fix(i.y)
+        #     i.id
+        #     i.group]
+        #   s:
+        #     n : i.name
+        #     hp :~~(100*i.status.hp/i.status.HP)
+        #     lv: i.status.lv
+        #   t:(unless i.target then null else [
+        #       fix(i.target.x),fix(i.target.y),i.target.id, i.target.group
+        #     ])
+        #   a:[]
+        # stage.socket.emit 'update',
+          # objs: ret
         # floors[0].emit 'update',
       n++
 
@@ -183,7 +181,7 @@ require('zappa') config.port, ->
 
   # ==== clinet wewbsocket ====
   @client '/index.js': ->
-    fid = 1
+    fid = 0
     window.socket = @connect("http://localhost:4444/f"+fid)
     socket.on 'connection',(data)->
       grr.create_map data.map
@@ -199,61 +197,4 @@ require('zappa') config.port, ->
 
     socket.on 'update_char' ,(data)->
       view.CharInfo data
-
-  # ==== server wewbsocket ====
-  fnum = 1
-  fnum = -1
-  for fr in floors 
-    fnum++
-    fr.on "connection" ,(soc)->
-        id = soc.id 
-      d "Connected: #{id}"
-
-      player = null
-      stage = game.stages[fnum]
-
-      soc.emit 'connection',
-        map:stage._map
-        uid:id
-
-      # login and logout
-      soc.on 'login',(data)->
-        name = data.name
-        Users.get name, (e,savedata)=>
-          player = stage.join id,name,savedata , soc
-          soc.emit 'update_char',player.toData()
-
-      soc.on "disconnect" ,(data)->
-        d "Disconnected: #{id}"
-        save player,=>
-          stage.leave(id)
-
-      # player action
-      soc.on "keydown" ,(data)->
-        player?.keys[data.code] = 1
-
-      soc.on "keyup" ,(data)->
-        player?.keys[data.code] = 0
-
-      soc.on "click_map" ,(data)->
-        player?._wait = 0
-        player?.destination =
-          x:data.x
-          y:data.y
-
-      soc.on "click_map" ,(data)->
-        player?.status.use_battle_point( data.at)
-        save player,->d 'save done'
-        soc.emit 'update_char',  player?.toData()
-
-      soc.on "use_battle_point" ,(data)->
-        player?.status.use_battle_point(data.at)
-        save player,->d 'save done'
-        soc.emit 'update_char',  player?.toData()
-
-      soc.on "use_skill_point", (data)->
-        player?.skills.use_skill_point(data.at)
-  #       save player,->d 'save done'
-        soc.emit 'update_char' , player?.toData()
-
 

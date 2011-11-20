@@ -5,18 +5,17 @@
 {pow,sqrt,abs,random,max,min} = Math
 {Stage} = require "./../stage"
 
-nstore = require('nstore')
-Users = nstore.new("savedata.db")
 save = (char,fn=->)->
   return fn(true,null) unless char?.name
-  Users.get char.name, (e,item)->
+  db.get char.name, (e,item)->
     console.log "save : ", char.name
-    Users.save char.name , char.toData() ,(e)->
+    db.save char.name , char.toData() ,(e)->
       if e
         console.log e
-        
+
 class RandomStage extends Stage
-  constructor: (@context,socket) ->
+  constructor: (@context,ns_socket,db) ->
+    @ns_socket = ns_socket
     super()
     @_map = @create_map 60,60,7
     @max_object_count = 10
@@ -25,55 +24,83 @@ class RandomStage extends Stage
     @objects = []
 
     # for ns
-    socket.on "connection" ,(soc)=>
-      id = socket.id 
+    ns_socket.on "connection" ,(usoc)=>
+      id = usoc.id 
       player = null
 
-      socket.emit 'connection',
-        map:stage._map
-        uid:id
+      usoc.emit 'connection',
+        map: @_map
+        uid: id
 
       # login and logout
-      socket.on 'login',(data)=>
+      usoc.on 'login',(data)=>
         name = data.name
-        Users.get name, (e,savedata)=>
-          player = @join id,name,savedata, soc
-          socket.emit 'update_char',player.toData()
+        db.get name, (e,savedata)=>
+          console.log savedata ,e
+          player = @join id,name,savedata, usoc
+          console.log 'on login data'
+          console.log player.toData()
+          usoc.emit 'update_char',player.toData()
 
-      socket.on "disconnect" ,(data)=>
+      usoc.on "disconnect" ,(data)=>
         d "Disconnected: #{id}"
-        save player,=>
-          @leave(id)
+        unless char?.name
+          ''
+        else 
+          db.get char.name, (e,item)->
+            console.log "save : ", char.name
+            db.save char.name , char.toData() ,(e)->
+              console.log e or 'save done'
+        @leave(id)
 
       # player action
-      socket.on "keydown" ,(data)->
+      usoc.on "keydown" ,(data)->
         player?.keys[data.code] = 1
 
-      socket.on "keyup" ,(data)->
+      usoc.on "keyup" ,(data)->
         player?.keys[data.code] = 0
 
-      socket.on "click_map" ,(data)->
+      usoc.on "click_map" ,(data)->
         player?._wait = 0
         player?.destination =
           x:data.x
           y:data.y
 
-      socket.on "click_map" ,(data)->
+      usoc.on "click_map" ,(data)->
         player?.status.use_battle_point( data.at)
         save player,->d 'save done'
-        socket.emit 'update_char',  player?.toData()
+        usoc.emit 'update_char',  player?.toData()
 
-      socket.on "use_battle_point" ,(data)->
+      usoc.on "use_battle_point" ,(data)->
         player?.status.use_battle_point(data.at)
         save player,->d 'save done'
-        socket.emit 'update_char',  player?.toData()
+        usoc.emit 'update_char',  player?.toData()
 
-      socket.on "use_skill_point", (data)->
+      usoc.on "use_skill_point", (data)->
         player?.skills.use_skill_point(data.at)
         save player,->d 'save done'
-        socket.emit 'update_char' , player?.toData()
+        usoc.emit 'update_char' , player?.toData()
 
+  emit : ->
+    fix = (n)-> ~~(100*n)/100
+    objs = @objects.concat (v for k,v of @players)
+    ret = objs.map (i)->
+      o:[
+        fix(i.x)
+        fix(i.y)
+        i.id
+        i.group]
+      s:
+        n : i.name
+        hp :~~(100*i.status.hp/i.status.HP)
+        lv: i.status.lv
+      t:(unless i.target then null else [
+          fix(i.target.x),fix(i.target.y),i.target.id, i.target.group
+        ])
+      a:[]
 
+    @ns_socket.emit 'update',
+      objs: ret
 
   get_objs:->
     (v for _,v of @players).concat(@objects)
