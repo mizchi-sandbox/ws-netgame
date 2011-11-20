@@ -82,7 +82,8 @@ class ChainHit extends DamageHit
       if @actor.get_distance(@actor.target) < @range
         tar.push (e = @actor.target )
         nobjs = e.find_obj(e.group,objs,@range/2)
-        nobjs.remove e
+        # nobjs.remove e
+        nobjs.splice nobjs.indexOf(e),1
         if nobjs.length is 0 
           return tar
         if nobjs.length > 0  

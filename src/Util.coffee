@@ -6,10 +6,10 @@ randint = (from,to)->
     from = 0
   ~~(random()*(to-from+1))+from
 
-Array::remove = (obj)-> @splice(@indexOf(obj),1)
-Array::size = ()-> @length
-Array::first = ()-> @[0]
-Array::last = ()-> @[@length-1]
-Array::each = Array::forEach
+# Array::remove = (obj)-> @splice(@indexOf(obj),1)
+# Array::size = ()-> @length
+# Array::first = ()-> @[0]
+# Array::last = ()-> @[@length-1]
+# Array::each = Array::forEach
 
 exports.randint = randint

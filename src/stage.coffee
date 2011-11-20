@@ -2,7 +2,7 @@
 {Player, Goblin} = require('./char')
 {ObjectId} = require('./ObjectId')
 {Sprite,MoneyObject} = require('./sprites')
-require './Util'
+# require './Util'
 
 class Room
   constructor:(@map,@depth, @ax,@ay)->
@@ -172,11 +172,11 @@ class Stage extends Sprite
 
 
     for _ in [1..depth]
-      return [] if open_list.size() < 1 #探索失敗
+      return [] if open_list.length < 1 #探索失敗
 
-      # ヒューリスティック関数でソート
+      # ゴールまでの直線距離順にソート
       open_list.sort (a,b)->a.fs-b.fs
-      min_node = open_list.first() # 最小ノードを選択
+      min_node = open_list[0] # 最小ノードを選択
       close_list.push open_list.shift()
       [ mx ,my ] = min_node.pos
 
@@ -209,7 +209,8 @@ class Stage extends Sprite
                 obj.fs = n_gs+obj.hs+dist
                 obj.parent = min_node
                 open_list.push(obj)
-                close_list.remove(obj)
+                # close_list.remove(obj)
+                close_list.splice( close_list.indexOf(obj) , 1)
           else
             n = new Node([nx,ny])
             n.fs = n_gs+n.hs+dist

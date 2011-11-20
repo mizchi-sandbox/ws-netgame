@@ -419,7 +419,7 @@ GameRenderer = (function() {
       var key;
       e.preventDefault();
       key = this.getkey(e.keyCode);
-      return soc.emit("keydown", {
+      return socket.emit("keydown", {
         code: key
       });
     }, this);
@@ -427,7 +427,7 @@ GameRenderer = (function() {
       var key;
       e.preventDefault();
       key = this.getkey(e.keyCode);
-      return soc.emit("keyup", {
+      return socket.emit("keyup", {
         code: key
       });
     }, this);
@@ -437,7 +437,7 @@ GameRenderer = (function() {
       _ref2 = [dx + 2 * dy, dx - 2 * dy], rx = _ref2[0], ry = _ref2[1];
       _ref3 = this._camn, cx = _ref3[0], cy = _ref3[1];
       console.log(cx + rx / this.scale, cy + ry / this.scale);
-      return soc.emit("click_map", {
+      return socket.emit("click_map", {
         x: ~~(cx + rx / this.scale),
         y: ~~(cy + ry / this.scale)
       });

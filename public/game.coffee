@@ -332,12 +332,12 @@ class GameRenderer
     window.onkeydown = (e)=>
       e.preventDefault()
       key = @getkey(e.keyCode)
-      soc.emit "keydown",code:key
+      socket.emit "keydown",code:key
 
     window.onkeyup = (e)=>
       e.preventDefault()
       key = @getkey(e.keyCode)
-      soc.emit "keyup", code:key
+      socket.emit "keyup", code:key
 
     @canvas.onmousedown = (e)=>
       [dx,dy] = [e.offsetX-@scale*@x/2,e.offsetY-@scale*@y/2]
@@ -348,7 +348,7 @@ class GameRenderer
 
       [cx,cy] =  @_camn
       console.log cx + rx/@scale, cy + ry/@scale
-      soc.emit "click_map", x: ~~(cx+rx/@scale) ,y: ~~(cy + ry/@scale)
+      socket.emit "click_map", x: ~~(cx+rx/@scale) ,y: ~~(cy + ry/@scale)
 
   change_scale : (scale)->
     @scale = scale

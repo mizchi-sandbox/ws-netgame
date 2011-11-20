@@ -152,28 +152,28 @@ ClassData =
     learned: 
       Atack : 1
 
-class JobClass
-class Lord extends JobClass
-  constructor:->
-    @str = 0
-    @int = 0
-    @dex = 0 
+# class JobClass
+# class Lord extends JobClass
+#   constructor:->
+#     @str = 0
+#     @int = 0
+#     @dex = 0 
 
-  toData:->
-    str:@str
-    int:@int
-    dex:@dex
+#   toData:->
+#     str:@str
+#     int:@int
+#     dex:@dex
   
-class Rogue extends JobClass
-  constructor:->
-    @str = 7
-    @int = 9
-    @dex = 14 
+# class Rogue extends JobClass
+#   constructor:->
+#     @str = 7
+#     @int = 9
+#     @dex = 14 
     
-  toData:->
-    str:@str
-    int:@int
-    dex:@dex
+#   toData:->
+#     str:@str
+#     int:@int
+#     dex:@dex
 
 
 exports.ClassData = ClassData

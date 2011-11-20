@@ -2,13 +2,12 @@
 {Player} = require('./../Player')
 {ObjectId} = require('./../ObjectId')
 {MoneyObject} = require('./../sprites')
-
-require './../Util'
 {pow,sqrt,abs,random,max,min} = Math
 {Stage} = require "./../stage"
 
 class RandomStage extends Stage
-  constructor: (@context) ->
+  constructor: (@context,ns_socket,@db) ->
+    @ns_socket = ns_socket
     super()
     @_map = @create_map 60,60,7
     @max_object_count = 10
@@ -16,23 +15,96 @@ class RandomStage extends Stage
     @players = {}
     @objects = []
 
+    # for ns
+    $db = @db
+    
+    ns_socket.on "connection" ,(usoc)=>
+      save = (char,fn=->)->
+        return fn(true,null) unless char?.name
+        $db.get char.name, (e,item)->
+          $db.save char.name , char.toData() ,(e)->
+            fn()
+
+      id = usoc.id 
+      player = null
+      usoc.emit 'connection',
+        map: @_map
+        uid: id
+
+      # login and logout
+      usoc.on 'login',(data)=>
+        name = data.name
+        $db.get name, (e,savedata)=>
+          console.log e or savedata
+          player = @join id,name,savedata, usoc
+          usoc.emit 'update_char',player.toData()
+
+      usoc.on "disconnect" ,(data)=>
+        d "Disconnected: #{id}"
+        save player , =>
+          @leave(id)
+
+      # player action
+      usoc.on "keydown" ,(data)->
+        player?.keys[data.code] = 1
+
+      usoc.on "keyup" ,(data)->
+        player?.keys[data.code] = 0
+
+      usoc.on "click_map" ,(data)->
+        player?._wait = 0
+        player?.destination =
+          x:data.x
+          y:data.y
+
+      usoc.on "use_battle_point" ,(data)->
+        player?.status.use_battle_point(data.at)
+        save player,-> d 'save done'
+        usoc.emit 'update_char',  player?.toData()
+
+      usoc.on "use_skill_point", (data)->
+        player?.skills.use_skill_point(data.at)
+        save player,-> d 'save done'
+        usoc.emit 'update_char' , player?.toData()
+
+  emit : ->
+    fix = (n)-> ~~(100*n)/100
+    objs = @objects.concat (v for k,v of @players)
+    ret = objs.map (i)->
+      o:[
+        fix(i.x)
+        fix(i.y)
+        i.id
+        i.group]
+      s:
+        n : i.name
+        hp :~~(100*i.status.hp/i.status.HP)
+        lv: i.status.lv
+      t:(unless i.target then null else [
+          fix(i.target.x),fix(i.target.y),i.target.id, i.target.group
+        ])
+      a:[]
+
+    @ns_socket.emit 'update',
+      objs: ret
+
   get_objs:->
     (v for _,v of @players).concat(@objects)
 
-  join : (id,name,data={},emitter)->
+  join : (id,name,data={},__socket)->
     @context.start() unless @context.active
     p = @players[id] = new Player(@,data)
-    p.__emitter = emitter
+    p.__socket = __socket
 
-    # レベルアップ/ステータス変更時にアップデートするコールバック関数
     p.status.on_status_change = ->
-      emitter 'update_char', p.toData()
+      p.__socket.emit 'update_char',p.toData()
 
     [rx,ry]  = @get_random_point()
     p.set_pos rx,ry
 
     p.id = id
     p.name = name if name?
+    return p
 
   leave : (id)->
     delete @players[id]
@@ -56,7 +128,7 @@ class RandomStage extends Stage
       if p.is_dead() and p.cnt > 60
         console.log 'dead:',p.id,p.name
         console.log  p.toData()
-        @join p.id,p.name, p.toData(),p.__emitter
+        @join p.id,p.name, p.toData(),p.__socket
 
 
   pop_monster: () ->
@@ -65,5 +137,6 @@ class RandomStage extends Stage
       @objects.push( gob = new Goblin(@, ~~(6*Math.random()) ,ObjectId.Enemy) )
 
       gob.set_pos rx,ry
+
 
 exports.RandomStage = RandomStage
