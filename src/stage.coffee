@@ -77,6 +77,7 @@ class StageLoader
   constructor: () ->
     super 0, 0
     @_map = @blank(30,30) #@load(maps.debug)
+    @_map = new Room(10,10)
 
 
   _rotate90:(map)->

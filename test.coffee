@@ -1,15 +1,16 @@
 vows = require 'vows'
 assert = require 'assert'
+# nstore = require('nstore')
+{ Stage }  = require './src/stage'
 
 vows.describe('GameTest').addBatch
-  GameCore:
-    topic:
-      Game:require("./src/core").Game
-    init_and_kill:(t)->
-      game = new t.Game()
-      game.start()
-      game.stop()
-      assert.isTrue( !!game.pid )
+  StageGenerator:
+    topic: new Stage
+    init_and_kill:(stage)->
+      map = stage.create_map 45,90,7
+      console.log map
+      for i in map
+        console.log i.join('').split('0') .join(' ').split(1).join('/')
   # Map:
   # Equip:
   #   topic:
@@ -26,8 +27,3 @@ vows.describe('GameTest').addBatch
 .export module
 
 
-Game=require("./src/core").Game
-game = new Game()
-game.start()
-# game.stop()
-# assert.isTrue( !!game.pid )
