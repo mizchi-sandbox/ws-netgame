@@ -387,11 +387,9 @@ class GameRenderer
         @_camn = [x,y]
         @cam = @to_ism_native(x*@scale,y*@scale)
         break
-
+    [cx,cy] = @cam
     # 初期化
     @g.clearRect(0,0,640,480)
-
-    [cx,cy] = @cam
 
     @gr_sp?.draw(@,cx,cy)
     for i in objs
@@ -439,4 +437,20 @@ class GameRenderer
         @g.fillText ''+~~(hp) , vx-6,vy-@scale/4
         @g.fillText n , vx-10,vy+6
     # @gr_sp?.draw_upper(@g,cx,cy)
+
+    # start 
+    [sx,sy] = @events.start
+    [vx,vy] = @to_ism( sx*@scale,sy*@scale)
+    @g.init Color.i(255,64,64),0.8
+    @g.arc( vx , vy ,@scale/2 ,0 , 2*Math.PI )
+    @g.fill()
+
+    # goal 
+    [gx,gy] = @events.goal
+    [vx,vy] = @to_ism( gx*@scale,gy*@scale)
+    @g.init Color.i(64,64,255),0.8
+    @g.arc( vx , vy ,@scale/2 ,0 , 2*Math.PI )
+    @g.fill()
+
+    # goal 
 

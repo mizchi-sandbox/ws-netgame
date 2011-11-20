@@ -14,22 +14,29 @@ class RandomStage extends Stage
     @max_object_count = 10
     @cnt = 0
     @players = {}
+    @sockets = {}
     @objects = []
+
+    @events = 
+      start : @get_random_point()
+      goal : @get_random_point()
 
     # for ns
     $db = @db
-    
+    $sockets = @sockets
     ns_socket.on "connection" ,(usoc)=>
       save = (char,fn=->)->
         return fn(true,null) unless char?.name
         $db.get char.name, (e,item)->
           $db.save char.name , char.toData() ,(e)->
             fn()
-
       id = usoc.id 
       player = null
+      $sockets[id] = usoc
+
       usoc.emit 'connection',
         map: @_map
+        events: @events
         uid: id
 
       # login and logout
@@ -117,6 +124,26 @@ class RandomStage extends Stage
     @sweep()
     if @objects.length < @max_object_count and @cnt % 10 is 0
      @pop_monster()
+
+    [gx,gy] = @events.goal
+    for k,v of @players
+      if v.get_distance(x:gx,y:gy) < 1
+        console.log 'change the world from the goal'
+        console.log k
+        console.log @sockets
+        @sockets[k].emit 'change_world',{}
+        # delete @sockets[k]
+
+    [sx,sy] = @events.start
+    for k,v of @players
+      if v.get_distance(x:sx,y:sy) < 1
+        console.log 'change the world from the start'
+        console.log k
+        console.log @sockets
+        @sockets[k].emit 'change_world',{}
+        # delete @sockets[k]
+
+
     @cnt++
 
   sweep: ()->

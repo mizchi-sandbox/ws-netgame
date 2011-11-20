@@ -466,7 +466,7 @@ GameRenderer = (function() {
     return [dx + 2 * dy, dx - 2 * dy];
   };
   GameRenderer.prototype.render = function(data) {
-    var PI, cx, cy, hp, i, id, lv, n, objs, oid, tid, toid, tvx, tvy, tx, ty, vx, vy, x, y, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _results;
+    var PI, cx, cy, gx, gy, hp, i, id, lv, n, objs, oid, sx, sy, tid, toid, tvx, tvy, tx, ty, vx, vy, x, y, _i, _j, _len, _len2, _ref, _ref10, _ref11, _ref12, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
     if (data == null) {
       data = {};
     }
@@ -480,20 +480,61 @@ GameRenderer = (function() {
         break;
       }
     }
-    this.g.clearRect(0, 0, 640, 480);
     _ref2 = this.cam, cx = _ref2[0], cy = _ref2[1];
+    this.g.clearRect(0, 0, 640, 480);
     if ((_ref3 = this.gr_sp) != null) {
       _ref3.draw(this, cx, cy);
     }
-    _results = [];
     for (_j = 0, _len2 = objs.length; _j < _len2; _j++) {
       i = objs[_j];
       _ref4 = i.o, x = _ref4[0], y = _ref4[1], id = _ref4[2], oid = _ref4[3];
       _ref5 = i.s, n = _ref5.n, hp = _ref5.hp, lv = _ref5.lv;
       _ref6 = this.to_ism(x * this.scale, y * this.scale), vx = _ref6[0], vy = _ref6[1];
-      _results.push((-64 < vx && vx < 706) && (-48 < vy && vy < 528) ? (id === this.uid ? (this.player_sp.draw(this, vx, vy), this.g.init(Color.Blue)) : void 0, id > 1000 ? (this.char_sp.draw(this, vx, vy), this.g.init(Color.Green)) : (this.monster_sp.draw(this, vx, vy), this.g.init(Color.Red)), i.t ? ((_ref7 = i.t, tx = _ref7[0], ty = _ref7[1], tid = _ref7[2], toid = _ref7[3], _ref7), (_ref8 = this.to_ism(tx * this.scale, ty * this.scale), tvx = _ref8[0], tvy = _ref8[1], _ref8), this.g.globalAlpha = 0.7, this.g.beginPath(), this.g.moveTo(vx, vy), this.g.lineTo(tvx, tvy), this.g.stroke(), (PI = Math.PI, Math), this.g.beginPath(), this.g.arc(tvx + this.scale / 8, tvy, ~~(this.scale / 2), -PI / 6, PI / 6, false), this.g.stroke(), this.g.beginPath(), this.g.arc(tvx + this.scale / 8, tvy, ~~(this.scale / 2), 5 * PI / 6, 7 * PI / 6, false), this.g.stroke(), this.g.stroke()) : void 0, this.g.init(Color.White), this.g.initText(this.scale / 10, 'Georgia'), this.g.fillText('' + ~~hp, vx - 6, vy - this.scale / 4), this.g.fillText(n, vx - 10, vy + 6)) : void 0);
+      if ((-64 < vx && vx < 706) && (-48 < vy && vy < 528)) {
+        if (id === this.uid) {
+          this.player_sp.draw(this, vx, vy);
+          this.g.init(Color.Blue);
+        }
+        if (id > 1000) {
+          this.char_sp.draw(this, vx, vy);
+          this.g.init(Color.Green);
+        } else {
+          this.monster_sp.draw(this, vx, vy);
+          this.g.init(Color.Red);
+        }
+        if (i.t) {
+          _ref7 = i.t, tx = _ref7[0], ty = _ref7[1], tid = _ref7[2], toid = _ref7[3];
+          _ref8 = this.to_ism(tx * this.scale, ty * this.scale), tvx = _ref8[0], tvy = _ref8[1];
+          this.g.globalAlpha = 0.7;
+          this.g.beginPath();
+          this.g.moveTo(vx, vy);
+          this.g.lineTo(tvx, tvy);
+          this.g.stroke();
+          PI = Math.PI;
+          this.g.beginPath();
+          this.g.arc(tvx + this.scale / 8, tvy, ~~(this.scale / 2), -PI / 6, PI / 6, false);
+          this.g.stroke();
+          this.g.beginPath();
+          this.g.arc(tvx + this.scale / 8, tvy, ~~(this.scale / 2), 5 * PI / 6, 7 * PI / 6, false);
+          this.g.stroke();
+          this.g.stroke();
+        }
+        this.g.init(Color.White);
+        this.g.initText(this.scale / 10, 'Georgia');
+        this.g.fillText('' + ~~hp, vx - 6, vy - this.scale / 4);
+        this.g.fillText(n, vx - 10, vy + 6);
+      }
     }
-    return _results;
+    _ref9 = this.events.start, sx = _ref9[0], sy = _ref9[1];
+    _ref10 = this.to_ism(sx * this.scale, sy * this.scale), vx = _ref10[0], vy = _ref10[1];
+    this.g.init(Color.i(255, 64, 64), 0.8);
+    this.g.arc(vx, vy, this.scale / 2, 0, 2 * Math.PI);
+    this.g.fill();
+    _ref11 = this.events.goal, gx = _ref11[0], gy = _ref11[1];
+    _ref12 = this.to_ism(gx * this.scale, gy * this.scale), vx = _ref12[0], vy = _ref12[1];
+    this.g.init(Color.i(64, 64, 255), 0.8);
+    this.g.arc(vx, vy, this.scale / 2, 0, 2 * Math.PI);
+    return this.g.fill();
   };
   return GameRenderer;
 })();

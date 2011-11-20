@@ -147,7 +147,16 @@ require('zappa') config.port, ->
       
       socket.on 'connection',(data)->
         grr.create_map data.map
+        grr.events = data.events
         grr.uid = data.uid
+
+      socket.on 'change_world',(data)->
+        console.log 'change'
+        socket.disconnect()
+        window.floor++
+        console.log floor
+        window.login name , ++window.floor
+
 
       socket.on 'update',(data)->
         view.ObjectInfo data.objs
