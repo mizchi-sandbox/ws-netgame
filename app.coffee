@@ -15,7 +15,7 @@ require('zappa') config.port, ->
     #   console.log cookie
     #   callback(null, true)
 
-  dungeon_depth = 3
+  dungeon_depth = 50
   floors = (@io.of('/f'+i) for i in [0...dungeon_depth])
   game = new Game {},dungeon_depth,@io,Users
   game.start()
@@ -122,18 +122,22 @@ require('zappa') config.port, ->
   # emitter for client
   game.ws = =>
     # for n , stage of game.stages
-    n = 0
+    c = 0
     for stage in game.stages
+      c++
       pnames = (v.name for k,v of stage.players)
       if pnames.length
-        console.log n,pnames, pnames.length
+        console.log stage.depth,pnames
         stage.emit()
-        #   seq = ['one','two','three','four','five','six','seven','eight','nine','zero']
-        #   buff = []
-        #   for i in seq 
-        #     if s = player.skills.sets[i]
-        #       buff.push ~~(100*s.ct/s.CT)
-        #   # @io.sockets.socket(id).emit 'update_ct',cooltime:buff
+        for k,p of stage.players
+          console.log k
+          seq = ['one','two','three','four','five','six','seven','eight','nine','zero']
+          buff = []
+          for i in seq 
+            if s = p.skills.sets[i]
+              buff.push ~~(100*s.ct/s.CT)
+          stage.sockets[k].emit 'update_ct',cooltime:buff
+          console.log k,buff
 
         #   if game.cnt%(15*120) is 0
         #     @io.sockets.socket(id).emit 'update_char',player.toData()
@@ -142,6 +146,9 @@ require('zappa') config.port, ->
   @client '/index.js': ->
     # fid = 0
     window.login = (name , fid)=>
+      console.log fid
+      window.socket?.disconnect()
+      delete window.socket
       window.socket = @connect("http://localhost:4444/f"+fid)
       socket.emit 'login', name:name
       
@@ -150,25 +157,28 @@ require('zappa') config.port, ->
         grr.events = data.events
         grr.uid = data.uid
 
-      socket.on 'change_world',(data)->
-        console.log 'change'
+      socket.on 'next_floor',(data)->
         socket.disconnect()
         window.floor++
-        console.log floor
-        window.login name , ++window.floor
+        window.login name , window.floor
 
+      socket.on 'prev_floor',(data)->
+        socket.disconnect()
+        window.floor--
+        window.login name , window.floor
 
       socket.on 'update',(data)->
         view.ObjectInfo data.objs
         grr.render data
 
       socket.on 'update_ct',(data)->
-        view.ObjectInfo data.objs
+        # console.log data
+        # # view.ObjectInfo data.objs
         view.CoolTime data.cooltime
 
       socket.on 'update_char' ,(data)->
         view.CharInfo data
 
-    window.logout = ()=>
-      socket.disconnet()
+    # window.logout = ()=>
+    #   socket.disconnet()
 

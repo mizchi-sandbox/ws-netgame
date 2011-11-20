@@ -6,7 +6,8 @@
 {Stage} = require "./../stage"
 
 class RandomStage extends Stage
-  constructor: (@context,ns_socket,@db) ->
+  constructor: (@context,@depth,ns_socket,@db) ->
+    console.log @depth
     @ns_socket = ns_socket
     super()
     root = @create_tworoom 60,60,5
@@ -23,7 +24,6 @@ class RandomStage extends Stage
 
     # for ns
     $db = @db
-    $sockets = @sockets
     ns_socket.on "connection" ,(usoc)=>
       save = (char,fn=->)->
         return fn(true,null) unless char?.name
@@ -32,7 +32,8 @@ class RandomStage extends Stage
             fn()
       id = usoc.id 
       player = null
-      $sockets[id] = usoc
+      console.log 'player ',id,' logged in to ', @depth
+      @sockets[id] = usoc
 
       usoc.emit 'connection',
         map: @_map
@@ -47,8 +48,17 @@ class RandomStage extends Stage
           player = @join id,name,savedata, usoc
           usoc.emit 'update_char',player.toData()
 
+      usoc.on 'logout',(data)=>
+        console.log @players[id]
+        delete @players[id]
+        delete @sockets[id]
+
       usoc.on "disconnect" ,(data)=>
+        console.log @players[id]
         d "Disconnected: #{id}"
+        delete @players[id]
+        delete @sockets[id]
+
         save player , =>
           @leave(id)
 
@@ -131,18 +141,21 @@ class RandomStage extends Stage
         console.log 'change the world from the goal'
         console.log k
         console.log @sockets
-        @sockets[k].emit 'change_world',{}
-        # delete @sockets[k]
+        console.log 'go prev floor'
+        @sockets[k].emit 'next_floor',{}
+        delete @players[k]
+        console.log 'delete',k
+        @leave k
 
-    [sx,sy] = @events.start
-    for k,v of @players
-      if v.get_distance(x:sx,y:sy) < 1
-        console.log 'change the world from the start'
-        console.log k
-        console.log @sockets
-        @sockets[k].emit 'change_world',{}
-        # delete @sockets[k]
-
+    # if @depth > 0
+    #   [sx,sy] = @events.start
+    #   for k,v of @players
+    #     if v.get_distance(x:sx,y:sy) < 1
+    #       console.log 'go prev floor'
+    #       @sockets[k].emit 'prev_floor',{}
+    #       console.log @sockets
+    #       console.log "logout ",k
+    #       @leave k
 
     @cnt++
 

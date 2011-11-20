@@ -466,7 +466,7 @@ GameRenderer = (function() {
     return [dx + 2 * dy, dx - 2 * dy];
   };
   GameRenderer.prototype.render = function(data) {
-    var PI, cx, cy, gx, gy, hp, i, id, lv, n, objs, oid, sx, sy, tid, toid, tvx, tvy, tx, ty, vx, vy, x, y, _i, _j, _len, _len2, _ref, _ref10, _ref11, _ref12, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+    var PI, cx, cy, gx, gy, hp, i, id, lv, n, objs, oid, tid, toid, tvx, tvy, tx, ty, vx, vy, x, y, _i, _j, _len, _len2, _ref, _ref10, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
     if (data == null) {
       data = {};
     }
@@ -525,13 +525,8 @@ GameRenderer = (function() {
         this.g.fillText(n, vx - 10, vy + 6);
       }
     }
-    _ref9 = this.events.start, sx = _ref9[0], sy = _ref9[1];
-    _ref10 = this.to_ism(sx * this.scale, sy * this.scale), vx = _ref10[0], vy = _ref10[1];
-    this.g.init(Color.i(255, 64, 64), 0.8);
-    this.g.arc(vx, vy, this.scale / 2, 0, 2 * Math.PI);
-    this.g.fill();
-    _ref11 = this.events.goal, gx = _ref11[0], gy = _ref11[1];
-    _ref12 = this.to_ism(gx * this.scale, gy * this.scale), vx = _ref12[0], vy = _ref12[1];
+    _ref9 = this.events.goal, gx = _ref9[0], gy = _ref9[1];
+    _ref10 = this.to_ism(gx * this.scale, gy * this.scale), vx = _ref10[0], vy = _ref10[1];
     this.g.init(Color.i(64, 64, 255), 0.8);
     this.g.arc(vx, vy, this.scale / 2, 0, 2 * Math.PI);
     return this.g.fill();

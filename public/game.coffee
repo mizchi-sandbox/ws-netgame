@@ -439,11 +439,11 @@ class GameRenderer
     # @gr_sp?.draw_upper(@g,cx,cy)
 
     # start 
-    [sx,sy] = @events.start
-    [vx,vy] = @to_ism( sx*@scale,sy*@scale)
-    @g.init Color.i(255,64,64),0.8
-    @g.arc( vx , vy ,@scale/2 ,0 , 2*Math.PI )
-    @g.fill()
+    # [sx,sy] = @events.start
+    # [vx,vy] = @to_ism( sx*@scale,sy*@scale)
+    # @g.init Color.i(255,64,64),0.8
+    # @g.arc( vx , vy ,@scale/2 ,0 , 2*Math.PI )
+    # @g.fill()
 
     # goal 
     [gx,gy] = @events.goal
