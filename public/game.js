@@ -358,6 +358,47 @@ GroundSprite = (function() {
   return GroundSprite;
 })();
 GameRenderer = (function() {
+  GameRenderer.prototype.getkey = function(keyCode) {
+    switch (keyCode) {
+      case 68:
+      case 39:
+        return 'right';
+      case 65:
+      case 37:
+        return 'left';
+      case 87:
+      case 38:
+        return 'up';
+      case 83:
+      case 40:
+        return 'down';
+      case 32:
+        return 'space';
+      case 17:
+        return 'ctrl';
+      case 48:
+        return 'zero';
+      case 49:
+        return 'one';
+      case 50:
+        return 'two';
+      case 51:
+        return 'three';
+      case 52:
+        return 'four';
+      case 53:
+        return 'five';
+      case 54:
+        return 'sixe';
+      case 55:
+        return 'seven';
+      case 56:
+        return 'eight';
+      case 57:
+        return 'nine';
+    }
+    return String.fromCharCode(keyCode).toLowerCase();
+  };
   function GameRenderer(x, y, scale) {
     this.x = x;
     this.y = y;
@@ -374,22 +415,22 @@ GameRenderer = (function() {
     this.char_sp = new CharSprite(this.scale);
     this.monster_sp = new MonsterSprite(this.scale);
     this.tile_sp = new TileSprite(this.scale);
-    window.onkeydown = function(e) {
+    window.onkeydown = __bind(function(e) {
       var key;
       e.preventDefault();
-      key = getkey(e.keyCode);
+      key = this.getkey(e.keyCode);
       return soc.emit("keydown", {
         code: key
       });
-    };
-    window.onkeyup = function(e) {
+    }, this);
+    window.onkeyup = __bind(function(e) {
       var key;
       e.preventDefault();
-      key = getkey(e.keyCode);
+      key = this.getkey(e.keyCode);
       return soc.emit("keyup", {
         code: key
       });
-    };
+    }, this);
     this.canvas.onmousedown = __bind(function(e) {
       var cx, cy, dx, dy, rx, ry, _ref, _ref2, _ref3;
       _ref = [e.offsetX - this.scale * this.x / 2, e.offsetY - this.scale * this.y / 2], dx = _ref[0], dy = _ref[1];

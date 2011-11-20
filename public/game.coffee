@@ -289,7 +289,29 @@ class GroundSprite extends CanvasSprite
     # g.drawImage(@upper, cx-ix, cy+iy-240, 640, 480, 0 , 0 , 640, 480)
 
 
+
 class GameRenderer
+
+  getkey : (keyCode) ->
+    switch keyCode
+      when 68,39 then return 'right'
+      when 65,37 then return 'left'
+      when 87,38 then return 'up'
+      when 83,40 then return 'down'
+      when 32 then return 'space'
+      when 17 then return 'ctrl'
+      when 48 then return 'zero'
+      when 49 then return 'one'
+      when 50 then return 'two'
+      when 51 then return 'three'
+      when 52 then return 'four'
+      when 53 then return 'five'
+      when 54 then return 'sixe'
+      when 55 then return 'seven'
+      when 56 then return 'eight'
+      when 57 then return 'nine'
+    return String.fromCharCode(keyCode).toLowerCase()
+
   constructor : (@x,@y,@scale)->
     # @map = null
     @uid = null
@@ -307,14 +329,14 @@ class GameRenderer
     @monster_sp = new MonsterSprite @scale
     @tile_sp = new TileSprite @scale
 
-    window.onkeydown = (e)->
+    window.onkeydown = (e)=>
       e.preventDefault()
-      key = getkey(e.keyCode)
+      key = @getkey(e.keyCode)
       soc.emit "keydown",code:key
 
-    window.onkeyup = (e)->
+    window.onkeyup = (e)=>
       e.preventDefault()
-      key = getkey(e.keyCode)
+      key = @getkey(e.keyCode)
       soc.emit "keyup", code:key
 
     @canvas.onmousedown = (e)=>

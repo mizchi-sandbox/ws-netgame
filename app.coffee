@@ -37,27 +37,6 @@ require('zappa') config.port, ->
     r.d = (e)->
       console.log e
 
-    r.getkey = (keyCode) ->
-      switch keyCode
-        when 68,39 then return 'right'
-        when 65,37 then return 'left'
-        when 87,38 then return 'up'
-        when 83,40 then return 'down'
-        when 32 then return 'space'
-        when 17 then return 'ctrl'
-        when 48 then return 'zero'
-        when 49 then return 'one'
-        when 50 then return 'two'
-        when 51 then return 'three'
-        when 52 then return 'four'
-        when 53 then return 'five'
-        when 54 then return 'sixe'
-        when 55 then return 'seven'
-        when 56 then return 'eight'
-        when 57 then return 'nine'
-      return String.fromCharCode(keyCode).toLowerCase()
-
-  game.sockets = @io.sockets
   # Rooting
   @get '/logout': ->
     @session.destroy ()=>
