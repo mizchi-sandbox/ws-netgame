@@ -522,7 +522,7 @@ GameRenderer = (function() {
         this.g.init(Color.White);
         this.g.initText(this.scale / 10, 'Georgia');
         this.g.fillText('' + ~~hp, vx - 6, vy - this.scale / 4);
-        this.g.fillText(n, vx - 10, vy + 6);
+        this.g.fillText(n + ".lv" + lv, vx - 10, vy + 6);
       }
     }
     _ref9 = this.events.goal, gx = _ref9[0], gy = _ref9[1];

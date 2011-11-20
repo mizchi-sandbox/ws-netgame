@@ -1,9 +1,9 @@
-{Goblin} = require('./../Monster')
 {Player} = require('./../Player')
 {ObjectId} = require('./../ObjectId')
 {MoneyObject} = require('./../sprites')
 {pow,sqrt,abs,random,max,min} = Math
 {Stage} = require "./../stage"
+{HoundDog, Goblin} = require('./../Monster')
 
 class RandomStage extends Stage
   constructor: (@context,@depth,ns_socket,@db) ->
@@ -50,14 +50,11 @@ class RandomStage extends Stage
 
       usoc.on 'logout',(data)=>
         console.log @players[id]
-        delete @players[id]
-        delete @sockets[id]
 
       usoc.on "disconnect" ,(data)=>
         console.log @players[id]
         d "Disconnected: #{id}"
-        delete @players[id]
-        delete @sockets[id]
+        @leave id
 
         save player , =>
           @leave(id)
@@ -165,19 +162,29 @@ class RandomStage extends Stage
         @objects.splice(i,1)
         break
 
-    for _,p of @players
+    for id,p of @players
       if p.is_dead() and p.cnt > 60
         console.log 'dead:',p.id,p.name
         console.log  p.toData()
-        @join p.id,p.name, p.toData(),p.__socket
+        p.status.hp = p.status.HP
+        [rx,ry]  = @get_random_point()
+        p.set_pos rx,ry
+        # @join id,p.name, p.toData(),p.__socket
 
 
   pop_monster: () ->
-    if random() < 0.9
-      [rx,ry]  = @get_random_point()
-      @objects.push( gob = new Goblin(@, ~~(6*Math.random()) ,ObjectId.Enemy) )
-
-      gob.set_pos rx,ry
+    [rx,ry]  = @get_random_point()
+    if random() < 0.8
+      @objects.push( monster = new Goblin(@, 
+        ~~(@depth*3+3*Math.random()) ,
+        ObjectId.Enemy)
+      )
+    else
+      @objects.push( monster = new HoundDog(@, 
+        ~~(1+@depth*2+3*Math.random()) ,
+        ObjectId.Enemy)
+      )
+    monster.set_pos rx,ry
 
 
 exports.RandomStage = RandomStage

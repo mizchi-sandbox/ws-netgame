@@ -435,7 +435,7 @@ class GameRenderer
         @g.init Color.White
         @g.initText @scale/10, 'Georgia'
         @g.fillText ''+~~(hp) , vx-6,vy-@scale/4
-        @g.fillText n , vx-10,vy+6
+        @g.fillText n+".lv"+lv , vx-10,vy+6
     # @gr_sp?.draw_upper(@g,cx,cy)
 
     # start 
