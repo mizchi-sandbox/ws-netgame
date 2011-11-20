@@ -148,27 +148,6 @@ require('zappa') config.port, ->
       if pnames.length
         console.log n,pnames, pnames.length
         stage.emit()
-        # objs = stage.objects.concat (v for k,v of stage.players)
-        # ret = objs.map (i)->
-        #   o:[
-        #     fix(i.x)
-        #     fix(i.y)
-        #     i.id
-        #     i.group]
-        #   s:
-        #     n : i.name
-        #     hp :~~(100*i.status.hp/i.status.HP)
-        #     lv: i.status.lv
-        #   t:(unless i.target then null else [
-        #       fix(i.target.x),fix(i.target.y),i.target.id, i.target.group
-        #     ])
-        #   a:[]
-        # stage.socket.emit 'update',
-          # objs: ret
-        # floors[0].emit 'update',
-      n++
-
-        # for id,player of stage.players
         #   seq = ['one','two','three','four','five','six','seven','eight','nine','zero']
         #   buff = []
         #   for i in seq 
@@ -181,20 +160,26 @@ require('zappa') config.port, ->
 
   # ==== clinet wewbsocket ====
   @client '/index.js': ->
-    fid = 0
-    window.socket = @connect("http://localhost:4444/f"+fid)
-    socket.on 'connection',(data)->
-      grr.create_map data.map
-      grr.uid = data.uid
+    # fid = 0
+    window.login = (name , fid)=>
+      window.socket = @connect("http://localhost:4444/f"+fid)
+      socket.emit 'login', name:name
+      
+      socket.on 'connection',(data)->
+        grr.create_map data.map
+        grr.uid = data.uid
 
-    socket.on 'update',(data)->
-      view.ObjectInfo data.objs
-      grr.render data
+      socket.on 'update',(data)->
+        view.ObjectInfo data.objs
+        grr.render data
 
-    socket.on 'update_ct',(data)->
-      view.ObjectInfo data.objs
-      view.CoolTime data.cooltime
+      socket.on 'update_ct',(data)->
+        view.ObjectInfo data.objs
+        view.CoolTime data.cooltime
 
-    socket.on 'update_char' ,(data)->
-      view.CharInfo data
+      socket.on 'update_char' ,(data)->
+        view.CharInfo data
+
+    window.logout = ()=>
+      socket.disconnet()
 

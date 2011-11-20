@@ -92,6 +92,6 @@ coffeescript ->
   canvas.height = y * cell
   $ =>
     $.get '/api/id' , (name)=>
-      socket.emit 'login', name:name
+      window.login name , 0
       window.grr = new GameRenderer x,y,cell
       ko.applyBindings view

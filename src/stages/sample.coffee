@@ -5,16 +5,8 @@
 {pow,sqrt,abs,random,max,min} = Math
 {Stage} = require "./../stage"
 
-save = (char,fn=->)->
-  return fn(true,null) unless char?.name
-  db.get char.name, (e,item)->
-    console.log "save : ", char.name
-    db.save char.name , char.toData() ,(e)->
-      if e
-        console.log e
-
 class RandomStage extends Stage
-  constructor: (@context,ns_socket,db) ->
+  constructor: (@context,ns_socket,@db) ->
     @ns_socket = ns_socket
     super()
     @_map = @create_map 60,60,7
@@ -24,10 +16,17 @@ class RandomStage extends Stage
     @objects = []
 
     # for ns
+    $db = @db
+    
     ns_socket.on "connection" ,(usoc)=>
+      save = (char,fn=->)->
+        return fn(true,null) unless char?.name
+        $db.get char.name, (e,item)->
+          $db.save char.name , char.toData() ,(e)->
+            fn()
+
       id = usoc.id 
       player = null
-
       usoc.emit 'connection',
         map: @_map
         uid: id
@@ -35,23 +34,15 @@ class RandomStage extends Stage
       # login and logout
       usoc.on 'login',(data)=>
         name = data.name
-        db.get name, (e,savedata)=>
-          console.log savedata ,e
+        $db.get name, (e,savedata)=>
+          console.log e or savedata
           player = @join id,name,savedata, usoc
-          console.log 'on login data'
-          console.log player.toData()
           usoc.emit 'update_char',player.toData()
 
       usoc.on "disconnect" ,(data)=>
         d "Disconnected: #{id}"
-        unless char?.name
-          ''
-        else 
-          db.get char.name, (e,item)->
-            console.log "save : ", char.name
-            db.save char.name , char.toData() ,(e)->
-              console.log e or 'save done'
-        @leave(id)
+        save player , =>
+          @leave(id)
 
       # player action
       usoc.on "keydown" ,(data)->
@@ -66,19 +57,14 @@ class RandomStage extends Stage
           x:data.x
           y:data.y
 
-      usoc.on "click_map" ,(data)->
-        player?.status.use_battle_point( data.at)
-        save player,->d 'save done'
-        usoc.emit 'update_char',  player?.toData()
-
       usoc.on "use_battle_point" ,(data)->
         player?.status.use_battle_point(data.at)
-        save player,->d 'save done'
+        save player,-> d 'save done'
         usoc.emit 'update_char',  player?.toData()
 
       usoc.on "use_skill_point", (data)->
         player?.skills.use_skill_point(data.at)
-        save player,->d 'save done'
+        save player,-> d 'save done'
         usoc.emit 'update_char' , player?.toData()
 
   emit : ->
@@ -151,5 +137,6 @@ class RandomStage extends Stage
       @objects.push( gob = new Goblin(@, ~~(6*Math.random()) ,ObjectId.Enemy) )
 
       gob.set_pos rx,ry
+
 
 exports.RandomStage = RandomStage
