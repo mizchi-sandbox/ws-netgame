@@ -171,12 +171,12 @@ class Character extends Sprite
       if not @target in targets
         @target = targets[0]
         return
-      else if targets.size() == 1
+      else if targets.length == 1
         @target = targets[0]
         return
-      if targets.size() > 1
+      if targets.length > 1
         cur = targets.indexOf @target
-        if cur+1 >= targets.size()
+        if cur+1 >= targets.length
           cur = 0
         else
           cur += 1
@@ -229,7 +229,7 @@ class Character extends Sprite
   toData :()->
     obj = 
       name  : @name
-      password  : @password
+      pass  : @pass
       skills: @skills.toData()
       status: @status.toData()
       equipment : @equipment.toData() 

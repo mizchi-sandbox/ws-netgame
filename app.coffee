@@ -71,6 +71,7 @@ require('zappa') config.port, ->
       savedata.pass = pass
 
       Users.save @body.name , savedata, (e)=>
+        console.log e or 'save success'
         @session.name = name
         console.log 'create new character'
         @redirect '/'
@@ -81,7 +82,8 @@ require('zappa') config.port, ->
     pass = @body.pass
 
     Users.get name,(e,doc)=>
-      console.log e if e
+      console.log e or doc
+      console.log 'login get ', e 
       if pass is doc.pass
         @session.name = doc.name
         @redirect '/'
