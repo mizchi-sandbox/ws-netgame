@@ -82,6 +82,12 @@ class RandomStage extends Stage
         save player,-> d 'save done'
         usoc.emit 'update_char' , player?.toData()
 
+      usoc.on "set_skill", (data)->
+        at = data.at
+        sname = data.sname
+        player?.skills.set_key(at, sname)
+        usoc.emit 'update_char' , player?.toData()
+
   emit : ->
     fix = (n)-> ~~(100*n)/100
     objs = @objects.concat (v for k,v of @players)

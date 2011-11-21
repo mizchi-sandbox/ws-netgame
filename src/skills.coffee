@@ -1,6 +1,8 @@
 {ObjectId} = require './ObjectId'
 {randint} = require './Util'
-{random,sin,cos} = Math
+{abs,random,sin,cos} = Math
+_u = require 'underscore'
+
 seq = ['one','two','three','four','five','six','seven','eight','nine','zero']
 
 class Skill
@@ -80,15 +82,44 @@ class ChainHit extends DamageHit
     if @actor.target
       tar = []
       if @actor.get_distance(@actor.target) < @range
-        tar.push (e = @actor.target )
-        nobjs = e.find_obj(e.group,objs,@range/2)
-        # nobjs.remove e
-        nobjs.splice nobjs.indexOf(e),1
-        if nobjs.length is 0 
-          return tar
-        if nobjs.length > 0  
-          tar.push nobjs[ ~~(nobjs.length*Math.random()) ]
-          return tar
+        # cmap = @actor.scene._map
+        # exec = true
+        # [tx,ty] = [~~(@actor.target.x),~~(@actor.target.y)]
+        # [fx,fy] = [~~(@actor.x),~~(@actor.y)]
+        # if ty is fy
+        #   while ~~(abs(fx-tx))+~~(abs(fy-ty)) > 0
+        #     if tx>fx  then fx++
+        #     else if tx < fx then fx--
+        #     if cmap[~~(fx)][~~(fy)] is 1
+        #       exec = false
+        #       console.log 'break at ', fx,fy
+        #       break
+        # else
+        #   rate = (tx-fx)/(ty-fy)
+        #   while (~~(abs(fx-tx))) + (~~(abs(fy-ty))) > 0
+        #     console.log [fx,fy]
+        #     console.log [tx,ty]
+        #     console.log ~~(abs(fx-tx)) + ~~(abs(fy-ty)),rate
+        #     if tx > fx 
+        #       fx++
+        #       fy+=rate
+        #     else 
+        #       fx--
+        #       fy-=rate
+        #     # [fx,fy] = [fx+1 ,fy+rate]
+        #     if cmap[~~(fx)][~~(fy)] is 1
+        #       exec = false
+        #       console.log 'broken at ', fx,fy,rate
+        #       break
+        if true # exec
+          tar.push (e = @actor.target )
+          nobjs = e.find_obj(e.group,objs,@range/2)
+          nobjs.splice nobjs.indexOf(e),1
+          if nobjs.length is 0 
+            return tar
+          if nobjs.length > 0  
+            tar.push nobjs[ ~~(nobjs.length*Math.random()) ]
+            return tar
     return []
 
   _calc : (target)->
@@ -261,8 +292,10 @@ class SkillBox
     @build(@preset)
 
   set_key : (key,skill_name)->
-    lv = @learned[skill_name]
-    @sets[key] = new exports[skill_name](@actor,lv)
+    lv = @learned[skill_name] or 0
+    if exports[skill_name] and not (_u.any @sets,(k,v)-> v.name is skill_name) and @learned[skill_name] > 0
+      @sets[key] = new exports[skill_name](@actor,lv)
+      @preset[key] = skill_name 
 
   build : (preset)->
     for key,skill_name of preset
@@ -279,6 +312,7 @@ class SkillBox
 
   toData:->
     learned : @learned
+    # preset : key:k,sname:v?.name or null for k,v of @sets
     preset : @preset
     # ((key:i,data:@[i]?.toData()) for i in seq)
 

@@ -45,6 +45,8 @@ div class:"container-fluid row",->
           span "${lv} &nbsp;"
           $$ "{{if CharInfo().status.sp > 0}}"
           button bind(click:'use_skill_point',{target:'${sname}',class:"btn small"}), -> '+'
+          button bind(click:'set_skill',visible:'edit_skill_mode',{target:"${sname}"}),-> "set"
+
           $$ "{{/if}}"
         $$ "{{/each}}"
       $$ "{{/if}}"
@@ -63,19 +65,26 @@ div class:"container-fluid row",->
     jqtpl 'SkillInfo', ->
       $$ "{{if CharInfo()}}"
       div class:"row",->
-        $$ "{{each(i,sk) CharInfo().skills.preset}}"
-        div class:"span2",->
-          $$ "${sk}"
+        # $$ "{{each(i,sk) CharInfo().skills.preset}}"
+        $$ "{{each(k,v) keys}}"
+        div class:"span1",->
+          button (bind click:"wait_for_skill",{target:'${k}',class:'btn small'}),->'${k}'
+          $$ "{{if CharInfo().skills.preset[k] }}"
+          span "${CharInfo().skills.preset[k] }"
+          $$ "{{/if}}"
           # $$ "${sk}:${CharInfo().skills.learned(sk)}"
         $$ "{{/each}}"
         # $$ "{{if sk.data}}"
       $$ "{{/if}}"
       
+    jqtpl 'CTInfo', ->
+      $$ "{{if CharInfo()}}"
       div class:"row" , ->
         $$ "{{each(i,ct) CoolTime}}"
-        div class:'span2' ,->
-          p "[${i+1}] ${ct}%"
+        div class:'span1' ,->
+          p "${ct}%"
         $$ "{{/each}}"
+      $$ "{{/if}}"
 
     canvas id:"game",style:"float:left;background-color:black;"
 
@@ -90,6 +99,18 @@ coffeescript ->
   cell = 28
   canvas.width = x * cell
   canvas.height = y * cell
+
+  view.keys = 
+    one:null
+    two:null
+    three:null
+    four:null
+    five:null
+    six:null
+    seven:null
+    nine:null
+    zero:null
+
   $ =>
     $.get '/api/id' , (name)=>
       window.name = name

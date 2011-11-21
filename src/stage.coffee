@@ -82,7 +82,6 @@ class TwoRoom
     [sx,ex] = @ax
     [sy,ey] = @ay
 
-
     for i in [sx ... ex]
       for j in [sy ... ey]
         if (i == sx or i == (ex-1) ) or (j == sy or j == (ey-1))
@@ -332,7 +331,6 @@ class Stage extends Sprite
           min_cost = cost
           to = [tx,ty]
       path.push to
-      console.log [fx,fy] , 'to', to ,min_cost
 
     # ノード間を中折れ一回でつなげる
     [fx,fy] = path.shift()

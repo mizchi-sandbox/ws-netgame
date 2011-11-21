@@ -12,6 +12,7 @@ seq = ['one','two','three','four','five','six','seven','eight','nine','zero']
 
 class Character extends Sprite
   constructor: (@scene , @x=0,@y=0,@group=ObjectId.Enemy ,status={}) ->
+    @pass = ''
     super @x, @y
     @keys = {}
     @target = null
