@@ -53,7 +53,8 @@ require('zappa') config.port, ->
       @render index:
         id : @session.name
     else
-      @render login:{layout:false}
+      @render login:
+        layout:false
 
   @post '/register': ->
     console.log 'create account', @body
@@ -171,7 +172,8 @@ require('zappa') config.port, ->
       console.log fid
       window.socket?.disconnect()
       delete window.socket
-      window.socket = @connect("http://localhost:4444/f"+fid)
+      # window.socket = @connect("http://localhost:4444/f"+fid)
+      window.socket = @connect("http://"+location.host+"/f"+fid)
       socket.emit 'login', name:name
       
       socket.on 'connection',(data)->

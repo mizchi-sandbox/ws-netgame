@@ -1,4 +1,5 @@
 savedata.db
 config.coffee
+.DS_Store
 net-game.sublime-project
 net-game.sublime-workspace
