@@ -1,8 +1,18 @@
-{Game} = require './src/core'
-config = require './config'
 nstore = require('nstore')
+console.log 'load nstore'
+{Game} = require './src/core'
+console.log 'load core'
+config = require './config'
+
+# config = 
+#   port : 4444
+#   domain : 'http://localhost'
+#   session_secret : 'wowowowo'
+
+console.log 'load config'
 Users = nstore.new("savedata.db")
 {create_new} = require './src/Player'
+
 util = require './src/Util'
 
 require('zappa') config.port, ->
@@ -90,15 +100,6 @@ require('zappa') config.port, ->
         @redirect '/'
       else 
         @send 'no such a user'
-
-  # twitter login
-  twoauth = require('./twitter_oauth')
-  @get '/verify' : ->
-    twoauth.verify @request,@response,(token,token_secret,results)=>
-      @session.name = results.screen_name
-      console.log "[login] #{results.screen_name}"
-      @redirect '/'
-
 
   save = (char,fn=->)->
     return fn(true,null) unless char?.name

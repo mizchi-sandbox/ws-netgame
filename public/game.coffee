@@ -291,7 +291,6 @@ class GroundSprite extends CanvasSprite
 
 
 class GameRenderer
-
   getkey : (keyCode) ->
     switch keyCode
       when 68,39 then return 'right'
@@ -330,6 +329,7 @@ class GameRenderer
     @tile_sp = new TileSprite @scale
 
     window.onkeydown = (e)=>
+      console.log e.keyCode
       e.preventDefault()
       key = @getkey(e.keyCode)
       socket.emit "keydown",code:key
@@ -435,7 +435,7 @@ class GameRenderer
         @g.init Color.White
         @g.initText @scale/10, 'Georgia'
         @g.fillText ''+~~(hp) , vx-6,vy-@scale/4
-        @g.fillText n+".lv"+lv , vx-10,vy+6
+        @g.fillText n+".Lv"+lv , vx-10,vy+6
     # @gr_sp?.draw_upper(@g,cx,cy)
 
     # start 
